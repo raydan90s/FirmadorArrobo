@@ -1,0 +1,82 @@
+{
+  "Emisor": {
+    "DireccionMatriz": "Av. Ejemplo 123, Quito",
+    "DireccionEstablecimiento": "Av. Ejemplo 123, Quito",
+    "EnumTipoAmbiente": "1",
+    "NombreComercial": "Comercial Ejemplo",
+    "ObligadoContabilidad": true,
+    "RazonSocial": "Comercial Ejemplo S.A.",
+    "RegimenMicroEmpresas": false,
+    "RUC": "0992352434001",
+    "ContribuyenteEspecial": null,
+    "AgenteRetencion": null
+  },
+  "CodigoEstablecimiento": 1,
+  "CodigoPuntoEmision": 2,
+  "FechaEmision": "2025-10-31T10:30:00-05:00",
+  "Secuencial": 13,
+  "EnumTipoEmision": "1",
+  "Cliente": {
+    "Identificacion": "0956076269",
+    "RazonSocial": "Cliente Prueba S.A.",
+    "TipoIdentificador": "05"
+  },
+  "DocumentoModificado": {
+    "CodDocumento": "01",
+    "NumDocumento": "001-002-000000010",
+    "FechaEmisionDocumento": "2025-10-24T15:00:00-05:00"
+  },
+  "Motivo": "Devolución de producto defectuoso",
+  "InfoNotaCredito": {
+    "TotalSinImpuestos": 100.00,
+    "ValorModificacion": 115.00,
+    "Moneda": "DOLAR",
+    "TotalConImpuestos": [
+      {
+        "BaseImponible": 100.00,
+        "Valor": 15.00,
+        "Tarifa": 15.0,
+        "Codigo": "2",
+        "CodigoPorcentaje": "4"
+      }
+    ]
+  },
+  "Detalles": [
+    {
+      "Item": {
+        "CodigoPrincipal": "PROD-001",
+        "CodigoAuxiliar": "PR-001",
+        "Descripcion": "Producto de prueba"
+      },
+      "Cantidad": 1,
+      "PrecioUnitario": 100.00,
+      "Descuento": 0.00,
+      "PrecioTotalSinImpuesto": 100.00,
+      "Impuestos": [
+        {
+          "BaseImponible": 100.00,
+          "Valor": 15.00,
+          "Tarifa": 15.0,
+          "Codigo": "2",
+          "CodigoPorcentaje": "4"
+        }
+      ],
+      "DetallesAdicionales": [
+        {
+          "Nombre": "Observación",
+          "Valor": "Producto devuelto por falla"
+        }
+      ]
+    }
+  ],
+  "InfoAdicional": [
+    {
+      "Nombre": "Direccion",
+      "Valor": "Av. Cliente 456, Guayaquil"
+    },
+    {
+      "Nombre": "Email",
+      "Valor": "cliente@ejemplo.com"
+    }
+  ]
+}

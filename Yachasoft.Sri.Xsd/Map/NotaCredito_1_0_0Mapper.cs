@@ -110,14 +110,18 @@ namespace Yachasoft.Sri.Xsd.Map
       return impuesto1;
     })).ToArray();
 
-    internal static notaCreditoDetalleDetAdicional[] Map2(
-      List<CampoAdicional> detallesAdicionales)
+    internal static notaCreditoDetalleDetAdicional[] Map2(List<CampoAdicional> detallesAdicionales)
     {
-      return detallesAdicionales.ConvertAll<notaCreditoDetalleDetAdicional>((Converter<CampoAdicional, notaCreditoDetalleDetAdicional>) (detalle => new notaCreditoDetalleDetAdicional()
-      {
-        nombre = detalle.Nombre,
-        valor = detalle.Valor
-      })).ToArray();
+        if (detallesAdicionales == null || detallesAdicionales.Count == 0)
+            return null;
+
+        return detallesAdicionales.ConvertAll<notaCreditoDetalleDetAdicional>(
+            detalle => new notaCreditoDetalleDetAdicional()
+            {
+                nombre = detalle.Nombre,
+                valor = detalle.Valor
+            }
+        ).ToArray();
     }
 
     internal static totalConImpuestosTotalImpuesto[] Map(

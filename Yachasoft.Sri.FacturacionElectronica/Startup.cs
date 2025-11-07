@@ -23,6 +23,8 @@ namespace Yachasoft.Sri.FacturacionElectronica
         {
             services.AddControllers();
 
+            services.AddHttpClient();
+
             // Swagger
             services.AddSwaggerGen(c =>
             {

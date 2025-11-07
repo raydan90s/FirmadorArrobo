@@ -44,6 +44,9 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
         {
             try
             {
+                Console.WriteLine($"Fecha de emisión documento modificado: {request.DocumentoModificado.FechaEmisionDocumento}");
+                Console.WriteLine($"Fecha de emisión nota de débito: {request.FechaEmision}");
+
                 var emisor = new Emisor
                 {
                     DireccionMatriz = request.Emisor.DireccionMatriz,
@@ -167,12 +170,18 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     var autorizacionData = auto.Data?.Autorizaciones?.Autorizacion?.FirstOrDefault();
                     Console.WriteLine($"ESTADO DE COMPROBANTE DE AUTORIZACION: {System.Text.Json.JsonSerializer.Serialize(auto, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })}");
 
+                    Console.WriteLine("📌 Datos completos de la autorización recibida:");
+                    Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(autorizacionData, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+
                     if (auto.Ok)
                     {
                         Console.WriteLine("AUTORIZADO");
 
                         if (autorizacionData != null)
                         {
+                            Console.WriteLine("📌 Fecha de autorización recibida del SRI:");
+                            Console.WriteLine(autorizacionData.FechaAutorizacion);
+
                             notaDebito.Autorizacion.Numero = autorizacionData.NumeroAutorizacion;
                             if (DateTimeOffset.TryParse(autorizacionData.FechaAutorizacion, out var fechaOffset))
                             {
