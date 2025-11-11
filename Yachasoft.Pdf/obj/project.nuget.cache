@@ -1,14 +1,14 @@
 {
   "version": 2,
-  "dgSpecHash": "lTi8V5z3bZAWsX4x4OZXZlTWAAP9pvH5SrtEgwzrvLqzVjfDXS1g+H+WAn6SjU87hoDabvgc5kXfhY8Q1Nlx5g==",
+  "dgSpecHash": "yHgXP3q+vd0=",
   "success": true,
-  "projectFilePath": "/home/bitnami/GeneradorPDF/Yachasoft.Pdf/Yachasoft.Pdf.csproj",
+  "projectFilePath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Pdf\\Yachasoft.Pdf.csproj",
   "expectedPackageFiles": [
-    "/home/bitnami/.nuget/packages/pdfsharpcore/1.3.18/pdfsharpcore.1.3.18.nupkg.sha512",
-    "/home/bitnami/.nuget/packages/sixlabors.fonts/1.0.0-beta0013/sixlabors.fonts.1.0.0-beta0013.nupkg.sha512",
-    "/home/bitnami/.nuget/packages/sixlabors.imagesharp/1.0.4/sixlabors.imagesharp.1.0.4.nupkg.sha512",
-    "/home/bitnami/.nuget/packages/system.numerics.vectors/4.5.0/system.numerics.vectors.4.5.0.nupkg.sha512",
-    "/home/bitnami/.nuget/packages/system.runtime.compilerservices.unsafe/4.7.0/system.runtime.compilerservices.unsafe.4.7.0.nupkg.sha512"
+    "C:\\Users\\Sistemas\\.nuget\\packages\\pdfsharpcore\\1.3.18\\pdfsharpcore.1.3.18.nupkg.sha512",
+    "C:\\Users\\Sistemas\\.nuget\\packages\\sixlabors.fonts\\1.0.0-beta0013\\sixlabors.fonts.1.0.0-beta0013.nupkg.sha512",
+    "C:\\Users\\Sistemas\\.nuget\\packages\\sixlabors.imagesharp\\1.0.4\\sixlabors.imagesharp.1.0.4.nupkg.sha512",
+    "C:\\Users\\Sistemas\\.nuget\\packages\\system.numerics.vectors\\4.5.0\\system.numerics.vectors.4.5.0.nupkg.sha512",
+    "C:\\Users\\Sistemas\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\4.7.0\\system.runtime.compilerservices.unsafe.4.7.0.nupkg.sha512"
   ],
   "logs": []
 }

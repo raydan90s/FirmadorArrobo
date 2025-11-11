@@ -163,7 +163,10 @@
           "System.Security.Cryptography.Xml": "5.0.0-rc.2.20475.5"
         },
         "runtime": {
-          "FirmaXadesNet.dll": {}
+          "FirmaXadesNet.dll": {
+            "assemblyVersion": "2.2.1.0",
+            "fileVersion": "2.2.1.0"
+          }
         }
       },
       "Microsoft.Xades/1.0.0": {
@@ -171,7 +174,10 @@
           "System.Security.Cryptography.Xml": "5.0.0-rc.2.20475.5"
         },
         "runtime": {
-          "Microsoft.Xades.dll": {}
+          "Microsoft.Xades.dll": {
+            "assemblyVersion": "1.0.7.0",
+            "fileVersion": "1.0.7.0"
+          }
         }
       }
     }

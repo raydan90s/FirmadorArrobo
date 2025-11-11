@@ -218,19 +218,19 @@
     ]
   },
   "packageFolders": {
-    "/home/bitnami/.nuget/packages/": {}
+    "C:\\Users\\Sistemas\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/bitnami/GeneradorPDF/Yachasoft.Pdf/Yachasoft.Pdf.csproj",
+      "projectUniqueName": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Pdf\\Yachasoft.Pdf.csproj",
       "projectName": "Yachasoft.Pdf",
-      "projectPath": "/home/bitnami/GeneradorPDF/Yachasoft.Pdf/Yachasoft.Pdf.csproj",
-      "packagesPath": "/home/bitnami/.nuget/packages/",
-      "outputPath": "/home/bitnami/GeneradorPDF/Yachasoft.Pdf/obj/",
+      "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Pdf\\Yachasoft.Pdf.csproj",
+      "packagesPath": "C:\\Users\\Sistemas\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Pdf\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/bitnami/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\Sistemas\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net7.0"
@@ -248,7 +248,13 @@
         "warnAsError": [
           "NU1605"
         ]
-      }
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "9.0.200"
     },
     "frameworks": {
       "net7.0": {
@@ -275,7 +281,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/home/bitnami/.dotnet/sdk/7.0.410/RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200\\RuntimeIdentifierGraph.json"
       }
     }
   }

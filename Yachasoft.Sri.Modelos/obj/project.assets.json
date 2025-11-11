@@ -45,19 +45,19 @@
     ]
   },
   "packageFolders": {
-    "/home/bitnami/.nuget/packages/": {}
+    "C:\\Users\\Sistemas\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Modelos/Yachasoft.Sri.Modelos.csproj",
+      "projectUniqueName": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Modelos\\Yachasoft.Sri.Modelos.csproj",
       "projectName": "Yachasoft.Sri.Modelos",
-      "projectPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Modelos/Yachasoft.Sri.Modelos.csproj",
-      "packagesPath": "/home/bitnami/.nuget/packages/",
-      "outputPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Modelos/obj/",
+      "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Modelos\\Yachasoft.Sri.Modelos.csproj",
+      "packagesPath": "C:\\Users\\Sistemas\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Modelos\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/bitnami/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\Sistemas\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net7.0"
@@ -69,8 +69,8 @@
         "net7.0": {
           "targetAlias": "net7.0",
           "projectReferences": {
-            "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Core/Yachasoft.Sri.Core.csproj": {
-              "projectPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Core/Yachasoft.Sri.Core.csproj"
+            "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Core\\Yachasoft.Sri.Core.csproj": {
+              "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Core\\Yachasoft.Sri.Core.csproj"
             }
           }
         }
@@ -79,7 +79,13 @@
         "warnAsError": [
           "NU1605"
         ]
-      }
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "9.0.200"
     },
     "frameworks": {
       "net7.0": {
@@ -100,7 +106,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/home/bitnami/.dotnet/sdk/7.0.410/RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200\\RuntimeIdentifierGraph.json"
       }
     }
   }

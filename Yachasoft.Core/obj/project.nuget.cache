@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "T9wskkN4XnKua2j7ui7O5CQZ15gtKqy5h6ewysTfoG7i6Y78KRxZtwhKE6CWiowQ6RKPDpfrd7OAzj087YAilw==",
+  "dgSpecHash": "LBLPp/Jx99o=",
   "success": true,
-  "projectFilePath": "/home/bitnami/GeneradorPDF/Yachasoft.Core/Yachasoft.Core.csproj",
+  "projectFilePath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Core\\Yachasoft.Core.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

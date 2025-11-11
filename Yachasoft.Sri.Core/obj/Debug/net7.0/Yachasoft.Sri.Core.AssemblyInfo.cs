@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Yachasoft.Sri.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f811962ea8f98c6cf6662f9724e675a9b49ccadb")]
 [assembly: System.Reflection.AssemblyProductAttribute("Yachasoft.Sri.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Yachasoft.Sri.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

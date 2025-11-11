@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "AY+hzJr++qSyLIMFLFuTqMrRED0Vgu3fHp2Tol/3y0JH6X5zpqNgUmtjspOrdpZP7aXnpb4bMIzCGI2NO4F4Uw==",
+  "dgSpecHash": "DXip6R69ZvU=",
   "success": true,
-  "projectFilePath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Modelos/Yachasoft.Sri.Modelos.csproj",
+  "projectFilePath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Modelos\\Yachasoft.Sri.Modelos.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

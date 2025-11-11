@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/home/bitnami/GeneradorPDF/Yachasoft.Sri.DocumentosElectronicos/Yachasoft.Sri.DocumentosElectronicos.csproj": {}
+    "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.DocumentosElectronicos\\Yachasoft.Sri.DocumentosElectronicos.csproj": {}
   },
   "projects": {
-    "/home/bitnami/GeneradorPDF/FirmaXadesNet/FirmaXadesNet.csproj": {
+    "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\FirmaXadesNet\\FirmaXadesNet.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/bitnami/GeneradorPDF/FirmaXadesNet/FirmaXadesNet.csproj",
+        "projectUniqueName": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\FirmaXadesNet\\FirmaXadesNet.csproj",
         "projectName": "FirmaXadesNet",
-        "projectPath": "/home/bitnami/GeneradorPDF/FirmaXadesNet/FirmaXadesNet.csproj",
-        "packagesPath": "/home/bitnami/.nuget/packages/",
-        "outputPath": "/home/bitnami/GeneradorPDF/FirmaXadesNet/obj/",
+        "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\FirmaXadesNet\\FirmaXadesNet.csproj",
+        "packagesPath": "C:\\Users\\Sistemas\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\FirmaXadesNet\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/bitnami/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\Sistemas\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net7.0"
@@ -26,8 +26,8 @@
           "net7.0": {
             "targetAlias": "net7.0",
             "projectReferences": {
-              "/home/bitnami/GeneradorPDF/Microsoft.Xades/Microsoft.Xades.csproj": {
-                "projectPath": "/home/bitnami/GeneradorPDF/Microsoft.Xades/Microsoft.Xades.csproj"
+              "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Microsoft.Xades\\Microsoft.Xades.csproj": {
+                "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Microsoft.Xades\\Microsoft.Xades.csproj"
               }
             }
           }
@@ -36,7 +36,13 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net7.0": {
@@ -75,21 +81,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/home/bitnami/.dotnet/sdk/7.0.410/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "/home/bitnami/GeneradorPDF/Microsoft.Xades/Microsoft.Xades.csproj": {
+    "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Microsoft.Xades\\Microsoft.Xades.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/bitnami/GeneradorPDF/Microsoft.Xades/Microsoft.Xades.csproj",
+        "projectUniqueName": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Microsoft.Xades\\Microsoft.Xades.csproj",
         "projectName": "Microsoft.Xades",
-        "projectPath": "/home/bitnami/GeneradorPDF/Microsoft.Xades/Microsoft.Xades.csproj",
-        "packagesPath": "/home/bitnami/.nuget/packages/",
-        "outputPath": "/home/bitnami/GeneradorPDF/Microsoft.Xades/obj/",
+        "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Microsoft.Xades\\Microsoft.Xades.csproj",
+        "packagesPath": "C:\\Users\\Sistemas\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Microsoft.Xades\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/bitnami/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\Sistemas\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net7.0"
@@ -107,7 +113,13 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net7.0": {
@@ -134,21 +146,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/home/bitnami/.dotnet/sdk/7.0.410/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "/home/bitnami/GeneradorPDF/Yachasoft.Core/Yachasoft.Core.csproj": {
+    "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Core\\Yachasoft.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/bitnami/GeneradorPDF/Yachasoft.Core/Yachasoft.Core.csproj",
+        "projectUniqueName": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Core\\Yachasoft.Core.csproj",
         "projectName": "Yachasoft.Core",
-        "projectPath": "/home/bitnami/GeneradorPDF/Yachasoft.Core/Yachasoft.Core.csproj",
-        "packagesPath": "/home/bitnami/.nuget/packages/",
-        "outputPath": "/home/bitnami/GeneradorPDF/Yachasoft.Core/obj/",
+        "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Core\\Yachasoft.Core.csproj",
+        "packagesPath": "C:\\Users\\Sistemas\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Core\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/bitnami/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\Sistemas\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net7.0"
@@ -166,7 +178,13 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net7.0": {
@@ -187,21 +205,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/home/bitnami/.dotnet/sdk/7.0.410/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "/home/bitnami/GeneradorPDF/Yachasoft.Pdf/Yachasoft.Pdf.csproj": {
+    "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Pdf\\Yachasoft.Pdf.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/bitnami/GeneradorPDF/Yachasoft.Pdf/Yachasoft.Pdf.csproj",
+        "projectUniqueName": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Pdf\\Yachasoft.Pdf.csproj",
         "projectName": "Yachasoft.Pdf",
-        "projectPath": "/home/bitnami/GeneradorPDF/Yachasoft.Pdf/Yachasoft.Pdf.csproj",
-        "packagesPath": "/home/bitnami/.nuget/packages/",
-        "outputPath": "/home/bitnami/GeneradorPDF/Yachasoft.Pdf/obj/",
+        "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Pdf\\Yachasoft.Pdf.csproj",
+        "packagesPath": "C:\\Users\\Sistemas\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Pdf\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/bitnami/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\Sistemas\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net7.0"
@@ -219,7 +237,13 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net7.0": {
@@ -246,21 +270,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/home/bitnami/.dotnet/sdk/7.0.410/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Core/Yachasoft.Sri.Core.csproj": {
+    "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Core\\Yachasoft.Sri.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Core/Yachasoft.Sri.Core.csproj",
+        "projectUniqueName": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Core\\Yachasoft.Sri.Core.csproj",
         "projectName": "Yachasoft.Sri.Core",
-        "projectPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Core/Yachasoft.Sri.Core.csproj",
-        "packagesPath": "/home/bitnami/.nuget/packages/",
-        "outputPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Core/obj/",
+        "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Core\\Yachasoft.Sri.Core.csproj",
+        "packagesPath": "C:\\Users\\Sistemas\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Core\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/bitnami/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\Sistemas\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net7.0"
@@ -272,8 +296,8 @@
           "net7.0": {
             "targetAlias": "net7.0",
             "projectReferences": {
-              "/home/bitnami/GeneradorPDF/Yachasoft.Core/Yachasoft.Core.csproj": {
-                "projectPath": "/home/bitnami/GeneradorPDF/Yachasoft.Core/Yachasoft.Core.csproj"
+              "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Core\\Yachasoft.Core.csproj": {
+                "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Core\\Yachasoft.Core.csproj"
               }
             }
           }
@@ -282,7 +306,13 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net7.0": {
@@ -303,21 +333,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/home/bitnami/.dotnet/sdk/7.0.410/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "/home/bitnami/GeneradorPDF/Yachasoft.Sri.DocumentosElectronicos/Yachasoft.Sri.DocumentosElectronicos.csproj": {
+    "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.DocumentosElectronicos\\Yachasoft.Sri.DocumentosElectronicos.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.DocumentosElectronicos/Yachasoft.Sri.DocumentosElectronicos.csproj",
+        "projectUniqueName": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.DocumentosElectronicos\\Yachasoft.Sri.DocumentosElectronicos.csproj",
         "projectName": "Yachasoft.Sri.DocumentosElectronicos",
-        "projectPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.DocumentosElectronicos/Yachasoft.Sri.DocumentosElectronicos.csproj",
-        "packagesPath": "/home/bitnami/.nuget/packages/",
-        "outputPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.DocumentosElectronicos/obj/",
+        "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.DocumentosElectronicos\\Yachasoft.Sri.DocumentosElectronicos.csproj",
+        "packagesPath": "C:\\Users\\Sistemas\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.DocumentosElectronicos\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/bitnami/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\Sistemas\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net7.0"
@@ -329,17 +359,17 @@
           "net7.0": {
             "targetAlias": "net7.0",
             "projectReferences": {
-              "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Core/Yachasoft.Sri.Core.csproj": {
-                "projectPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Core/Yachasoft.Sri.Core.csproj"
+              "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Core\\Yachasoft.Sri.Core.csproj": {
+                "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Core\\Yachasoft.Sri.Core.csproj"
               },
-              "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Ride/Yachasoft.Sri.Ride.csproj": {
-                "projectPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Ride/Yachasoft.Sri.Ride.csproj"
+              "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Ride\\Yachasoft.Sri.Ride.csproj": {
+                "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Ride\\Yachasoft.Sri.Ride.csproj"
               },
-              "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Signer/Yachasoft.Sri.Signer.csproj": {
-                "projectPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Signer/Yachasoft.Sri.Signer.csproj"
+              "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Signer\\Yachasoft.Sri.Signer.csproj": {
+                "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Signer\\Yachasoft.Sri.Signer.csproj"
               },
-              "/home/bitnami/GeneradorPDF/Yachasoft.Sri.WebService/Yachasoft.Sri.WebService.csproj": {
-                "projectPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.WebService/Yachasoft.Sri.WebService.csproj"
+              "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.WebService\\Yachasoft.Sri.WebService.csproj": {
+                "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.WebService\\Yachasoft.Sri.WebService.csproj"
               }
             }
           }
@@ -348,7 +378,13 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net7.0": {
@@ -375,21 +411,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/home/bitnami/.dotnet/sdk/7.0.410/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Modelos/Yachasoft.Sri.Modelos.csproj": {
+    "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Modelos\\Yachasoft.Sri.Modelos.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Modelos/Yachasoft.Sri.Modelos.csproj",
+        "projectUniqueName": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Modelos\\Yachasoft.Sri.Modelos.csproj",
         "projectName": "Yachasoft.Sri.Modelos",
-        "projectPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Modelos/Yachasoft.Sri.Modelos.csproj",
-        "packagesPath": "/home/bitnami/.nuget/packages/",
-        "outputPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Modelos/obj/",
+        "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Modelos\\Yachasoft.Sri.Modelos.csproj",
+        "packagesPath": "C:\\Users\\Sistemas\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Modelos\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/bitnami/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\Sistemas\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net7.0"
@@ -401,8 +437,8 @@
           "net7.0": {
             "targetAlias": "net7.0",
             "projectReferences": {
-              "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Core/Yachasoft.Sri.Core.csproj": {
-                "projectPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Core/Yachasoft.Sri.Core.csproj"
+              "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Core\\Yachasoft.Sri.Core.csproj": {
+                "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Core\\Yachasoft.Sri.Core.csproj"
               }
             }
           }
@@ -411,7 +447,13 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net7.0": {
@@ -432,21 +474,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/home/bitnami/.dotnet/sdk/7.0.410/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Ride/Yachasoft.Sri.Ride.csproj": {
+    "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Ride\\Yachasoft.Sri.Ride.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Ride/Yachasoft.Sri.Ride.csproj",
+        "projectUniqueName": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Ride\\Yachasoft.Sri.Ride.csproj",
         "projectName": "Yachasoft.Sri.Ride",
-        "projectPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Ride/Yachasoft.Sri.Ride.csproj",
-        "packagesPath": "/home/bitnami/.nuget/packages/",
-        "outputPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Ride/obj/",
+        "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Ride\\Yachasoft.Sri.Ride.csproj",
+        "packagesPath": "C:\\Users\\Sistemas\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Ride\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/bitnami/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\Sistemas\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net7.0"
@@ -458,11 +500,11 @@
           "net7.0": {
             "targetAlias": "net7.0",
             "projectReferences": {
-              "/home/bitnami/GeneradorPDF/Yachasoft.Pdf/Yachasoft.Pdf.csproj": {
-                "projectPath": "/home/bitnami/GeneradorPDF/Yachasoft.Pdf/Yachasoft.Pdf.csproj"
+              "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Pdf\\Yachasoft.Pdf.csproj": {
+                "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Pdf\\Yachasoft.Pdf.csproj"
               },
-              "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Modelos/Yachasoft.Sri.Modelos.csproj": {
-                "projectPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Modelos/Yachasoft.Sri.Modelos.csproj"
+              "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Modelos\\Yachasoft.Sri.Modelos.csproj": {
+                "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Modelos\\Yachasoft.Sri.Modelos.csproj"
               }
             }
           }
@@ -471,7 +513,13 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net7.0": {
@@ -502,21 +550,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/home/bitnami/.dotnet/sdk/7.0.410/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Signer/Yachasoft.Sri.Signer.csproj": {
+    "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Signer\\Yachasoft.Sri.Signer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Signer/Yachasoft.Sri.Signer.csproj",
+        "projectUniqueName": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Signer\\Yachasoft.Sri.Signer.csproj",
         "projectName": "Yachasoft.Sri.Signer",
-        "projectPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Signer/Yachasoft.Sri.Signer.csproj",
-        "packagesPath": "/home/bitnami/.nuget/packages/",
-        "outputPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Signer/obj/",
+        "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Signer\\Yachasoft.Sri.Signer.csproj",
+        "packagesPath": "C:\\Users\\Sistemas\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Signer\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/bitnami/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\Sistemas\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net7.0"
@@ -528,8 +576,8 @@
           "net7.0": {
             "targetAlias": "net7.0",
             "projectReferences": {
-              "/home/bitnami/GeneradorPDF/FirmaXadesNet/FirmaXadesNet.csproj": {
-                "projectPath": "/home/bitnami/GeneradorPDF/FirmaXadesNet/FirmaXadesNet.csproj"
+              "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\FirmaXadesNet\\FirmaXadesNet.csproj": {
+                "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\FirmaXadesNet\\FirmaXadesNet.csproj"
               }
             }
           }
@@ -538,7 +586,13 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net7.0": {
@@ -565,21 +619,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/home/bitnami/.dotnet/sdk/7.0.410/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "/home/bitnami/GeneradorPDF/Yachasoft.Sri.WebService/Yachasoft.Sri.WebService.csproj": {
+    "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.WebService\\Yachasoft.Sri.WebService.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.WebService/Yachasoft.Sri.WebService.csproj",
+        "projectUniqueName": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.WebService\\Yachasoft.Sri.WebService.csproj",
         "projectName": "Yachasoft.Sri.WebService",
-        "projectPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.WebService/Yachasoft.Sri.WebService.csproj",
-        "packagesPath": "/home/bitnami/.nuget/packages/",
-        "outputPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.WebService/obj/",
+        "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.WebService\\Yachasoft.Sri.WebService.csproj",
+        "packagesPath": "C:\\Users\\Sistemas\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.WebService\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/bitnami/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\Sistemas\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net7.0"
@@ -591,8 +645,8 @@
           "net7.0": {
             "targetAlias": "net7.0",
             "projectReferences": {
-              "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Core/Yachasoft.Sri.Core.csproj": {
-                "projectPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Core/Yachasoft.Sri.Core.csproj"
+              "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Core\\Yachasoft.Sri.Core.csproj": {
+                "projectPath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Core\\Yachasoft.Sri.Core.csproj"
               }
             }
           }
@@ -601,7 +655,13 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net7.0": {
@@ -622,7 +682,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/home/bitnami/.dotnet/sdk/7.0.410/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200\\RuntimeIdentifierGraph.json"
         }
       }
     }

@@ -23,26 +23,33 @@ namespace Yachasoft.Sri.FacturacionElectronica
         {
             services.AddControllers();
 
-            services.AddHttpClient();
-
             // Swagger
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Yachasoft.Sri.FacturacionElectronica", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "Yachasoft.Sri.FacturacionElectronica",
+                    Version = "v1"
+                });
             });
 
-            // Registro de servicios SRI
+            // Registro del cliente HTTP
+            services.AddHttpClient();
+
+            services.Configure<FrappeSettings>(Configuration.GetSection("Frappe"));
+
+            // Servicio de certificados (descarga desde Frappe)
+            services.AddHttpClient<FrappeCertificateService>(); // 👈 se registra con HttpClient inyectado
+
+            // Registro del uploader para archivos PDF/XML
+            services.AddSingleton<FrappeFileUploader>();
+
+            // Registro del core SRI
             services.AddSRIDocumentosElectronicos(options =>
             {
                 options.WebService.TipoAmbiente = Core.Enumerados.EnumTipoAmbiente.Prueba;
                 options.WebService.TipoEsquema = Core.Enumerados.EnumTipoEsquema.Offline;
             });
-
-            // 👇 Aquí registras tu FrappeFileUploader
-            services.AddSingleton<FrappeFileUploader>();
-
-            // Si prefieres que se cree uno nuevo por request:
-            // services.AddScoped<FrappeFileUploader>();
         }
 
         // Configuración del pipeline HTTP
