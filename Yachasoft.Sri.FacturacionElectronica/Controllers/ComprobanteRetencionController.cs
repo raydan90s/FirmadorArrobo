@@ -16,6 +16,8 @@ using Yachasoft.Sri.FacturacionElectronica.Models.Request;
 using Yachasoft.Core.Extensions;
 using Yachasoft.Sri.FacturacionElectronica.Services;
 using System.IO;
+using System.Text.Json;
+
 
 namespace Yachasoft.Sri.FacturacionElectronica.Controllers
 {
@@ -46,28 +48,51 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
             this._frappeUploader = frappeUploader;
             this._frappeCertService = frappeCertService;
         }
-
         [HttpPost("GenerarRetencion")]
-        
         public async Task<IActionResult> GenerarRetencion([FromBody] RetencionRequest request)
         {
+            string certificadoPath = null;
+
             try
             {
-                // 1️⃣ Descargar certificado desde Frappe dinámicamente
+                Console.WriteLine($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                Console.WriteLine($"📝 INICIANDO GENERACIÓN DE RETENCIÓN");
+                Console.WriteLine($"👤 Emisor: {request.Emisor.RazonSocial}");
+                Console.WriteLine($"📅 Fecha: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                Console.WriteLine($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+                // 1️⃣ Limpiar certificados antiguos
+                _frappeCertService.CleanupOldCertificates();
+
+                // 2️⃣ Descargar certificado desde Frappe dinámicamente
+                Console.WriteLine($"\n🔐 PASO 1: Descargando certificado digital desde Frappe...");
                 var certificado = await _frappeCertService.DownloadCertificateAsync(request.Emisor.RazonSocial);
+
+                Console.WriteLine("Certificado");
+                Console.WriteLine(JsonSerializer.Serialize(certificado, new JsonSerializerOptions { WriteIndented = true }));
+
                 if (!certificado.success)
                 {
+                    Console.WriteLine($"❌ ERROR: {certificado.error}");
                     return BadRequest(new
                     {
                         success = false,
-                        error = $"No se pudo descargar el certificado desde Frappe: {certificado.error}"
+                        error = $"No se pudo descargar el certificado: {certificado.error}"
                     });
                 }
 
-                // 2️⃣ Cargar el certificado descargado para firmar el XML
-                certificadoService.CargarDesdeP12(certificado.filePath, certificado.password);
+                certificadoPath = certificado.filePath;
+                Console.WriteLine($"✅ Certificado descargado exitosamente");
+                Console.WriteLine($"📂 Ruta: {certificadoPath}");
 
-                // 3️⃣ Construcción de emisor, establecimiento, punto de emisión y retención
+                // 3️⃣ Cargar el certificado descargado para firmar el XML
+                Console.WriteLine($"\n🔏 PASO 2: Cargando certificado en el servicio de firma...");
+                certificadoService.CargarDesdeP12(certificado.filePath, certificado.password);
+                Console.WriteLine($"✅ Certificado cargado correctamente");
+
+                // 4️⃣ Construcción de emisor, establecimiento, punto de emisión y retención
+                Console.WriteLine($"\n📋 PASO 3: Construyendo estructura del comprobante...");
+
                 var emisor = new Emisor
                 {
                     DireccionMatriz = request.Emisor.DireccionMatriz,
@@ -127,27 +152,45 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     retencion.InfoTributaria.EnumTipoEmision
                 );
 
-                // 4️⃣ Generar y firmar el XML con el certificado descargado
+                Console.WriteLine($"✅ Comprobante construido");
+                Console.WriteLine($"🔑 Clave de acceso: {retencion.InfoTributaria.ClaveAcceso}");
+                Console.WriteLine($"📄 Secuencial: {retencion.InfoTributaria.Secuencial}");
+
+                // 5️⃣ Generar y firmar el XML con el certificado descargado
+                Console.WriteLine($"\n✍️ PASO 4: Generando y firmando XML...");
                 var comprobanteXml = ComprobanteRetencion_1_0_0Mapper.Map(retencion);
                 var xmlFirmado = certificadoService.FirmarDocumento(comprobanteXml);
 
                 var nombreArchivoXml = $"COMPROBANTE_RETENCION_{retencion.InfoTributaria.ClaveAcceso}.xml";
-                xmlFirmado.Save(nombreArchivoXml);
+                var rutaXmlLocal = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", nombreArchivoXml);
+                xmlFirmado.Save(rutaXmlLocal);
+                Console.WriteLine($"✅ XML firmado guardado: {nombreArchivoXml}");
 
-                // 5️⃣ Enviar al SRI
+                // 6️⃣ Enviar al SRI
+                Console.WriteLine($"\n📤 PASO 5: Enviando comprobante al SRI...");
                 var envio = await webService.ValidarComprobanteAsync(xmlFirmado);
-                Console.WriteLine($"ESTADO DE COMPROBANTE DE ENVIO: {System.Text.Json.JsonSerializer.Serialize(envio, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })}");
+
+                Console.WriteLine($"📊 Respuesta del SRI:");
+                Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(envio,
+                    new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
 
                 if (envio.Ok)
                 {
+                    Console.WriteLine($"✅ Comprobante recibido por el SRI");
+                    Console.WriteLine($"⏳ Esperando 3 segundos antes de solicitar autorización...");
                     System.Threading.Thread.Sleep(3000);
+
+                    Console.WriteLine($"\n🔍 PASO 6: Consultando autorización...");
                     var auto = await webService.AutorizacionComprobanteAsync(retencion.InfoTributaria.ClaveAcceso);
                     var autorizacionData = auto.Data?.Autorizaciones?.Autorizacion?.FirstOrDefault();
-                    Console.WriteLine($"ESTADO DE COMPROBANTE DE AUTORIZACION: {System.Text.Json.JsonSerializer.Serialize(auto, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })}");
+
+                    Console.WriteLine($"📊 Respuesta de autorización:");
+                    Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(auto,
+                        new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
 
                     if (auto.Ok)
                     {
-                        Console.WriteLine("AUTORIZADO");
+                        Console.WriteLine($"\n🎉 ¡COMPROBANTE AUTORIZADO!");
 
                         if (autorizacionData != null)
                         {
@@ -160,31 +203,49 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                             {
                                 throw new Exception($"Fecha de autorización inválida: {autorizacionData.FechaAutorizacion}");
                             }
+
+                            Console.WriteLine($"📋 Número de autorización: {retencion.Autorizacion.Numero}");
+                            Console.WriteLine($"📅 Fecha de autorización: {retencion.Autorizacion.Fecha:yyyy-MM-dd HH:mm:ss}");
                         }
 
-                        // 6️⃣ Generar PDF y subir a Frappe
-                        var rutaPDF = $"/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica/COMPROBANTE_RETENCION_{retencion.InfoTributaria.ClaveAcceso}.pdf";
+                        // 7️⃣ Generar PDF y subir a Frappe
+                        Console.WriteLine($"\n📄 PASO 7: Generando RIDE (PDF)...");
+                        var nombrePdf = $"COMPROBANTE_RETENCION_{retencion.InfoTributaria.ClaveAcceso}.pdf";
+                        var rutaPDF = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", nombrePdf);
                         rIDEService.ComprobanteRetencion_1_0_0(retencion, rutaPDF);
+                        Console.WriteLine($"✅ PDF generado: {nombrePdf}");
 
+                        Console.WriteLine($"\n☁️ PASO 8: Subiendo archivos a Frappe...");
+
+                        // Subir PDF
+                        Console.WriteLine($"📤 Subiendo PDF...");
                         var respuestaUpload = await _frappeUploader.UploadFileAsync(
                             rutaPDF,
-                            Path.GetFileName(rutaPDF),
+                            nombrePdf,
                             folder: "Home/Documento de Retencion/PDF"
                         );
-                        Console.WriteLine("📤 Archivo PDF subido a Frappe:");
-                        Console.WriteLine(respuestaUpload);
+                        Console.WriteLine($"✅ PDF subido exitosamente");
+                        Console.WriteLine($"📋 Respuesta: {respuestaUpload}");
 
-                        var rutaXML = $"/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica/COMPROBANTE_RETENCION_{retencion.InfoTributaria.ClaveAcceso}.xml";
+                        // Subir XML
+                        Console.WriteLine($"📤 Subiendo XML...");
                         var respuestaXmlUpload = await _frappeUploader.UploadFileAsync(
-                            rutaXML,
-                            Path.GetFileName(rutaXML),
+                            rutaXmlLocal,
+                            nombreArchivoXml,
                             folder: "Home/Documento de Retencion/XML"
                         );
-                        Console.WriteLine("📤 Archivo XML subido a Frappe:");
-                        Console.WriteLine(respuestaXmlUpload);
+                        Console.WriteLine($"✅ XML subido exitosamente");
+                        Console.WriteLine($"📋 Respuesta: {respuestaXmlUpload}");
 
+                        // Limpiar archivos locales
+                        Console.WriteLine($"\n🗑️ PASO 9: Limpiando archivos temporales...");
                         await FileCleanupHelper.DeleteFileAsync(rutaPDF);
-                        await FileCleanupHelper.DeleteFileAsync(rutaXML);
+                        await FileCleanupHelper.DeleteFileAsync(rutaXmlLocal);
+                        Console.WriteLine($"✅ Archivos locales eliminados");
+
+                        Console.WriteLine($"\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                        Console.WriteLine($"✅ PROCESO COMPLETADO EXITOSAMENTE");
+                        Console.WriteLine($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
                         return Ok(new
                         {
@@ -198,19 +259,39 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                         });
                     }
 
+                    Console.WriteLine($"\n❌ COMPROBANTE NO AUTORIZADO");
+                    Console.WriteLine($"📋 Estado: {autorizacionData?.Estado}");
+
                     return Ok(new
                     {
                         success = false,
                         estado = autorizacionData?.Estado,
-                        mensajes = autorizacionData?.Mensajes?.Mensaje?.Select(m => new { m.Identificador, m.Mensaje_, m.Tipo, m.InformacionAdicional }).ToList()
+                        mensajes = autorizacionData?.Mensajes?.Mensaje?.Select(m => new
+                        {
+                            m.Identificador,
+                            m.Mensaje_,
+                            m.Tipo,
+                            m.InformacionAdicional
+                        }).ToList()
                     });
                 }
                 else
                 {
+                    Console.WriteLine($"\n❌ ERROR EN EL ENVÍO AL SRI");
                     var primerComprobante = envio.Data?.Comprobantes?.Comprobante?.FirstOrDefault();
                     var mensajesEnvio = primerComprobante?.Mensajes?.Mensaje
                         ?.Select(m => new { m.Identificador, m.Mensaje_, m.Tipo, m.InformacionAdicional })
                         .ToList();
+
+                    Console.WriteLine($"📋 Estado: {envio.Data?.Estado}");
+                    if (mensajesEnvio != null && mensajesEnvio.Any())
+                    {
+                        Console.WriteLine($"📋 Mensajes:");
+                        foreach (var msg in mensajesEnvio)
+                        {
+                            Console.WriteLine($"   - [{msg.Tipo}] {msg.Mensaje_}");
+                        }
+                    }
 
                     return Ok(new
                     {
@@ -222,15 +303,32 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"\n❌❌❌ ERROR CRÍTICO ❌❌❌");
+                Console.WriteLine($"Mensaje: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                }
+
                 return BadRequest(new
                 {
                     success = false,
                     error = ex.Message,
-                    stackTrace = ex.StackTrace
+                    stackTrace = ex.StackTrace,
+                    innerError = ex.InnerException?.Message
                 });
             }
+            finally
+            {
+                // 🗑️ Limpiar certificado temporal al finalizar (éxito o error)
+                if (!string.IsNullOrEmpty(certificadoPath))
+                {
+                    _frappeCertService.DeleteCertificate(certificadoPath);
+                }
+            }
         }
-
         #region Métodos de Mapeo y Parseo
 
         private List<ComprobanteRetencion_1_0_0Modelo.ImpuestoRetencion> MapearImpuestos(List<ImpuestoRetencionRequest> impuestos)
