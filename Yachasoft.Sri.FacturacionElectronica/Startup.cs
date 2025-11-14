@@ -23,7 +23,6 @@ namespace Yachasoft.Sri.FacturacionElectronica
         {
             services.AddControllers();
 
-            // Swagger
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo
@@ -36,10 +35,13 @@ namespace Yachasoft.Sri.FacturacionElectronica
             // Registro del cliente HTTP
             services.AddHttpClient();
 
+            // Configuración Frappe
             services.Configure<FrappeSettings>(Configuration.GetSection("Frappe"));
 
-            // Servicio de certificados (descarga desde Frappe)
-            services.AddHttpClient<FrappeCertificateService>(); // 👈 se registra con HttpClient inyectado
+            // Servicios de Frappe
+            services.AddHttpClient<FrappeCertificateService>(); // certificado .p12
+
+  
 
             // Registro del uploader para archivos PDF/XML
             services.AddSingleton<FrappeFileUploader>();

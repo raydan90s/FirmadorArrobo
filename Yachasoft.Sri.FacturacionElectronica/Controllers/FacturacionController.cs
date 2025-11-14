@@ -26,7 +26,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
         private readonly WebService.ISriWebService webService;
         private readonly Ride.IRIDEService rIDEService;
         private readonly FrappeFileUploader _frappeUploader;
-       private readonly FrappeCertificateService _frappeCertService; // 👈 NUEVA DEPENDENCIA
+        private readonly FrappeCertificateService _frappeCertService; // 👈 NUEVA DEPENDENCIA
 
 
         public FacturaController(
@@ -35,7 +35,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
             Ride.IRIDEService rIDEService,
             FrappeFileUploader frappeUploader,
             FrappeCertificateService frappeCertService) // <-- inyectado
-            // FrappeCertificateService frappeCertService // 👈 INYECTADO DESDE STARTUP
+                                                        // FrappeCertificateService frappeCertService // 👈 INYECTADO DESDE STARTUP
         {
             this.certificadoService = certificadoService;
             this.webService = webService;
@@ -369,6 +369,8 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
 
                 return BadRequest(new
                 {
+
+
                     success = false,
                     error = ex.Message,
                     stackTrace = ex.StackTrace,
