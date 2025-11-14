@@ -51,8 +51,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
         [HttpPost("GenerarRetencion")]
         public async Task<IActionResult> GenerarRetencion([FromBody] RetencionRequest request)
         {
-            string certificadoPath = null;
-
             try
             {
                 Console.WriteLine($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
@@ -60,38 +58,68 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 Console.WriteLine($"👤 Emisor: {request.Emisor.RazonSocial}");
                 Console.WriteLine($"📅 Fecha: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
                 Console.WriteLine($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                 
+                // 1️⃣ OPCIONAL: Verificar que el certificado existe y es válido
+                Console.WriteLine($"\n🔍 PASO 1: Verificando certificado en Frappe...");
+                var verificacion = await _frappeCertService.VerificarCertificadoAsync(request.Emisor.RazonSocial);
 
-                // 1️⃣ Limpiar certificados antiguos
-                _frappeCertService.CleanupOldCertificates();
-
-                // 2️⃣ Descargar certificado desde Frappe dinámicamente
-                Console.WriteLine($"\n🔐 PASO 1: Descargando certificado digital desde Frappe...");
-                var certificado = await _frappeCertService.DownloadCertificateAsync(request.Emisor.RazonSocial);
-
-                Console.WriteLine("Certificado");
-                Console.WriteLine(JsonSerializer.Serialize(certificado, new JsonSerializerOptions { WriteIndented = true }));
-
-                if (!certificado.success)
+                if (!verificacion.Success || !verificacion.Vigente)
                 {
-                    Console.WriteLine($"❌ ERROR: {certificado.error}");
+                    Console.WriteLine($"❌ ERROR: Certificado no vigente");
                     return BadRequest(new
                     {
                         success = false,
-                        error = $"No se pudo descargar el certificado: {certificado.error}"
+                        error = "Certificado no vigente o no encontrado",
+                        detalles = new
+                        {
+                            vigente = verificacion.Vigente,
+                            tiene_archivo = verificacion.TieneArchivo,
+                            tiene_password = verificacion.TienePassword,
+                            nombre_archivo = verificacion.NombreArchivo
+                        }
                     });
                 }
 
-                certificadoPath = certificado.filePath;
-                Console.WriteLine($"✅ Certificado descargado exitosamente");
-                Console.WriteLine($"📂 Ruta: {certificadoPath}");
+                Console.WriteLine($"✅ Certificado vigente encontrado");
+                Console.WriteLine($"📄 Archivo: {verificacion.NombreArchivo}");
 
-                // 3️⃣ Cargar el certificado descargado para firmar el XML
-                Console.WriteLine($"\n🔏 PASO 2: Cargando certificado en el servicio de firma...");
-                certificadoService.CargarDesdeP12(certificado.filePath, certificado.password);
-                Console.WriteLine($"✅ Certificado cargado correctamente");
+                // 2️⃣ Obtener certificado en Base64 desde Frappe
+                Console.WriteLine($"\n🔐 PASO 2: Descargando certificado digital desde Frappe...");
+                var certificado = await _frappeCertService.ObtenerCertificadoAsync(request.Emisor.RazonSocial);
+
+                Console.WriteLine("Certificado Info:");
+                Console.WriteLine(JsonSerializer.Serialize(new
+                {
+                    certificado.Success,
+                    certificado.Emisor,
+                    certificado.NombreArchivo,
+                    Base64Length = certificado.CertificadoBase64?.Length ?? 0,
+                    HasPassword = !string.IsNullOrEmpty(certificado.Contrasena)
+                }, new JsonSerializerOptions { WriteIndented = true }));
+
+                if (!certificado.Success)
+                {
+                    Console.WriteLine($"❌ ERROR: {certificado.Error}");
+                    return BadRequest(new
+                    {
+                        success = false,
+                        error = $"No se pudo descargar el certificado: {certificado.Error}"
+                    });
+                }
+
+                Console.WriteLine($"✅ Certificado descargado exitosamente");
+                Console.WriteLine($"📦 Tamaño Base64: {certificado.CertificadoBase64?.Length ?? 0} caracteres");
+
+                // 3️⃣ Cargar el certificado desde Base64 (NO desde archivo)
+                Console.WriteLine($"\n🔏 PASO 3: Cargando certificado en el servicio de firma...");
+                certificadoService.CargarDesdeBase64String(
+                    certificado.CertificadoBase64,
+                    certificado.Contrasena
+                );
+                Console.WriteLine($"✅ Certificado cargado correctamente en memoria");
 
                 // 4️⃣ Construcción de emisor, establecimiento, punto de emisión y retención
-                Console.WriteLine($"\n📋 PASO 3: Construyendo estructura del comprobante...");
+                Console.WriteLine($"\n📋 PASO 4: Construyendo estructura del comprobante...");
 
                 var emisor = new Emisor
                 {
@@ -156,8 +184,8 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 Console.WriteLine($"🔑 Clave de acceso: {retencion.InfoTributaria.ClaveAcceso}");
                 Console.WriteLine($"📄 Secuencial: {retencion.InfoTributaria.Secuencial}");
 
-                // 5️⃣ Generar y firmar el XML con el certificado descargado
-                Console.WriteLine($"\n✍️ PASO 4: Generando y firmando XML...");
+                // 5️⃣ Generar y firmar el XML
+                Console.WriteLine($"\n✍️ PASO 5: Generando y firmando XML...");
                 var comprobanteXml = ComprobanteRetencion_1_0_0Mapper.Map(retencion);
                 var xmlFirmado = certificadoService.FirmarDocumento(comprobanteXml);
 
@@ -167,26 +195,26 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 Console.WriteLine($"✅ XML firmado guardado: {nombreArchivoXml}");
 
                 // 6️⃣ Enviar al SRI
-                Console.WriteLine($"\n📤 PASO 5: Enviando comprobante al SRI...");
+                Console.WriteLine($"\n📤 PASO 6: Enviando comprobante al SRI...");
                 var envio = await webService.ValidarComprobanteAsync(xmlFirmado);
 
                 Console.WriteLine($"📊 Respuesta del SRI:");
-                Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(envio,
-                    new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+                Console.WriteLine(JsonSerializer.Serialize(envio,
+                    new JsonSerializerOptions { WriteIndented = true }));
 
                 if (envio.Ok)
                 {
                     Console.WriteLine($"✅ Comprobante recibido por el SRI");
                     Console.WriteLine($"⏳ Esperando 3 segundos antes de solicitar autorización...");
-                    System.Threading.Thread.Sleep(3000);
+                    await Task.Delay(3000); // ✅ Mejor usar Task.Delay que Thread.Sleep
 
-                    Console.WriteLine($"\n🔍 PASO 6: Consultando autorización...");
+                    Console.WriteLine($"\n🔍 PASO 7: Consultando autorización...");
                     var auto = await webService.AutorizacionComprobanteAsync(retencion.InfoTributaria.ClaveAcceso);
                     var autorizacionData = auto.Data?.Autorizaciones?.Autorizacion?.FirstOrDefault();
 
                     Console.WriteLine($"📊 Respuesta de autorización:");
-                    Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(auto,
-                        new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+                    Console.WriteLine(JsonSerializer.Serialize(auto,
+                        new JsonSerializerOptions { WriteIndented = true }));
 
                     if (auto.Ok)
                     {
@@ -208,14 +236,14 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                             Console.WriteLine($"📅 Fecha de autorización: {retencion.Autorizacion.Fecha:yyyy-MM-dd HH:mm:ss}");
                         }
 
-                        // 7️⃣ Generar PDF y subir a Frappe
-                        Console.WriteLine($"\n📄 PASO 7: Generando RIDE (PDF)...");
+                        // 8️⃣ Generar PDF y subir a Frappe
+                        Console.WriteLine($"\n📄 PASO 8: Generando RIDE (PDF)...");
                         var nombrePdf = $"COMPROBANTE_RETENCION_{retencion.InfoTributaria.ClaveAcceso}.pdf";
                         var rutaPDF = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", nombrePdf);
                         rIDEService.ComprobanteRetencion_1_0_0(retencion, rutaPDF);
                         Console.WriteLine($"✅ PDF generado: {nombrePdf}");
 
-                        Console.WriteLine($"\n☁️ PASO 8: Subiendo archivos a Frappe...");
+                        Console.WriteLine($"\n☁️ PASO 9: Subiendo archivos a Frappe...");
 
                         // Subir PDF
                         Console.WriteLine($"📤 Subiendo PDF...");
@@ -238,7 +266,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                         Console.WriteLine($"📋 Respuesta: {respuestaXmlUpload}");
 
                         // Limpiar archivos locales
-                        Console.WriteLine($"\n🗑️ PASO 9: Limpiando archivos temporales...");
+                        Console.WriteLine($"\n🗑️ PASO 10: Limpiando archivos temporales...");
                         await FileCleanupHelper.DeleteFileAsync(rutaPDF);
                         await FileCleanupHelper.DeleteFileAsync(rutaXmlLocal);
                         Console.WriteLine($"✅ Archivos locales eliminados");
@@ -320,15 +348,11 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     innerError = ex.InnerException?.Message
                 });
             }
-            finally
-            {
-                // 🗑️ Limpiar certificado temporal al finalizar (éxito o error)
-                if (!string.IsNullOrEmpty(certificadoPath))
-                {
-                    _frappeCertService.DeleteCertificate(certificadoPath);
-                }
-            }
+            // ✅ NO necesitas bloque finally porque no estás creando archivos temporales
         }
+
+
+
         #region Métodos de Mapeo y Parseo
 
         private List<ComprobanteRetencion_1_0_0Modelo.ImpuestoRetencion> MapearImpuestos(List<ImpuestoRetencionRequest> impuestos)
