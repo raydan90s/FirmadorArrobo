@@ -26,27 +26,30 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
         private readonly WebService.ISriWebService webService;
         private readonly Ride.IRIDEService rIDEService;
         private readonly FrappeFileUploader _frappeUploader;
-        private readonly FrappeCertificateService _frappeCertService; // 👈 NUEVA DEPENDENCIA
-
+        private readonly FrappeCertificateService _frappeCertService;
+        private readonly FrappeLogoService _frappeLogoService; // 👈 NUEVO
 
         public FacturaController(
             Signer.ICertificadoService certificadoService,
             WebService.ISriWebService webService,
             Ride.IRIDEService rIDEService,
             FrappeFileUploader frappeUploader,
-            FrappeCertificateService frappeCertService) // <-- inyectado
-                                                        // FrappeCertificateService frappeCertService // 👈 INYECTADO DESDE STARTUP
+            FrappeCertificateService frappeCertService,
+            FrappeLogoService frappeLogoService) // 👈 INYECTADO
         {
             this.certificadoService = certificadoService;
             this.webService = webService;
             this.rIDEService = rIDEService;
             this._frappeUploader = frappeUploader;
             this._frappeCertService = frappeCertService;
+            this._frappeLogoService = frappeLogoService; // 👈 ASIGNADO
         }
 
         [HttpPost("GenerarFactura")]
         public async Task<IActionResult> GenerarFactura([FromBody] FacturaRequest request)
         {
+            string logoPath = null; // 👈 Declarar aquí para usarlo en el finally
+            
             try
             {
                 Console.WriteLine($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
@@ -117,11 +120,37 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 // 4️⃣ Construcción de emisor, establecimiento, punto de emisión y factura
                 Console.WriteLine($"\n📋 PASO 4: Construyendo estructura de la factura...");
 
+                // 🖼️ Obtener logo desde Frappe
+                Console.WriteLine($"🖼️ Obteniendo logo desde Frappe...");
+                
+                var logoResult = await _frappeLogoService.ObtenerLogoAsync(request.Emisor.RazonSocial);
+
+                if (logoResult.Success && !string.IsNullOrWhiteSpace(logoResult.LogoBase64))
+                {
+                    Console.WriteLine($"✅ Logo obtenido: {logoResult.NombreArchivo}");
+                    
+                    // Guardar el logo temporalmente en el servidor
+                    var logoFileName = $"logo_{request.Emisor.RUC}_{DateTime.Now:yyyyMMddHHmmss}.png";
+                    logoPath = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", logoFileName);
+                    
+                    // Convertir Base64 a bytes y guardar
+                    var logoBytes = Convert.FromBase64String(logoResult.LogoBase64);
+                    await System.IO.File.WriteAllBytesAsync(logoPath, logoBytes);
+                    
+                    Console.WriteLine($"💾 Logo guardado temporalmente: {logoFileName}");
+                }
+                else
+                {
+                    Console.WriteLine($"⚠️ No se pudo obtener logo desde Frappe: {logoResult.Error}");
+                    Console.WriteLine($"📌 Se generará la factura sin logo");
+                    logoPath = null;
+                }
+
                 var emisor = new Emisor
                 {
                     DireccionMatriz = request.Emisor.DireccionMatriz,
                     EnumTipoAmbiente = EnumParserHelper.ParseTipoAmbiente(request.Emisor.EnumTipoAmbiente),
-                    Logo = "/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica/Logo_UTPL.png",
+                    Logo = logoPath, // 👈 USAR EL LOGO DINÁMICO
                     NombreComercial = request.Emisor.NombreComercial,
                     ObligadoContabilidad = request.Emisor.ObligadoContabilidad,
                     RazonSocial = request.Emisor.RazonSocial,
@@ -298,6 +327,14 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                         Console.WriteLine($"\n🗑️ PASO 10: Limpiando archivos temporales...");
                         await FileCleanupHelper.DeleteFileAsync(rutaPDF);
                         await FileCleanupHelper.DeleteFileAsync(rutaXmlLocal);
+                        
+                        // Limpiar logo temporal si existe
+                        if (!string.IsNullOrWhiteSpace(logoPath) && System.IO.File.Exists(logoPath))
+                        {
+                            await FileCleanupHelper.DeleteFileAsync(logoPath);
+                            Console.WriteLine($"✅ Logo temporal eliminado");
+                        }
+                        
                         Console.WriteLine($"✅ Archivos locales eliminados");
 
                         Console.WriteLine($"\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
@@ -369,13 +406,27 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
 
                 return BadRequest(new
                 {
-
-
                     success = false,
                     error = ex.Message,
                     stackTrace = ex.StackTrace,
                     innerError = ex.InnerException?.Message
                 });
+            }
+            finally
+            {
+                // 🧹 Limpieza final del logo temporal en caso de error
+                if (!string.IsNullOrWhiteSpace(logoPath) && System.IO.File.Exists(logoPath))
+                {
+                    try
+                    {
+                        System.IO.File.Delete(logoPath);
+                        Console.WriteLine($"🗑️ Logo temporal limpiado en finally: {logoPath}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"⚠️ No se pudo eliminar logo temporal: {ex.Message}");
+                    }
+                }
             }
         }
     }

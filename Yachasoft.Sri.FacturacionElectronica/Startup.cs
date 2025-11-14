@@ -38,10 +38,14 @@ namespace Yachasoft.Sri.FacturacionElectronica
             // Configuración Frappe
             services.Configure<FrappeSettings>(Configuration.GetSection("Frappe"));
 
+            services.AddHttpClient<FrappeLogoService>();
+            // ✅ aquí lo registras
+
             // Servicios de Frappe
             services.AddHttpClient<FrappeCertificateService>(); // certificado .p12
 
-  
+
+
 
             // Registro del uploader para archivos PDF/XML
             services.AddSingleton<FrappeFileUploader>();
