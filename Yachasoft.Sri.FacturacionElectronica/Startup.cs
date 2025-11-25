@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Yachasoft.Sri.FacturacionElectronica.Services;
+using System.Net;
 
 namespace Yachasoft.Sri.FacturacionElectronica
 {
@@ -14,11 +14,17 @@ namespace Yachasoft.Sri.FacturacionElectronica
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            
+            // 🔥 CONFIGURACIÓN TLS GLOBAL - Se ejecuta al iniciar la aplicación
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
+            ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+            
+            System.Console.WriteLine("🔐 Configuración TLS/SSL aplicada globalmente");
+            System.Console.WriteLine($"📋 Protocolos habilitados: {ServicePointManager.SecurityProtocol}");
         }
 
         public IConfiguration Configuration { get; }
 
-        // Se ejecuta al iniciar la app
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
@@ -38,17 +44,11 @@ namespace Yachasoft.Sri.FacturacionElectronica
             // Configuración Frappe
             services.Configure<FrappeSettings>(Configuration.GetSection("Frappe"));
 
+            // ✅ Servicios Frappe con HttpClient
             services.AddHttpClient<FrappeLogoService>();
-            // ✅ aquí lo registras
-
-            // Servicios de Frappe
-            services.AddHttpClient<FrappeCertificateService>(); // certificado .p12
-
-
-
-
-            // Registro del uploader para archivos PDF/XML
-            services.AddSingleton<FrappeFileUploader>();
+            services.AddHttpClient<FrappeCertificateService>();
+            services.AddHttpClient<IFrappeCredentialsService, FrappeCredentialsService>();
+            services.AddHttpClient<IFrappeFileUploader, FrappeFileUploader>();
 
             // Registro del core SRI
             services.AddSRIDocumentosElectronicos(options =>
@@ -58,7 +58,6 @@ namespace Yachasoft.Sri.FacturacionElectronica
             });
         }
 
-        // Configuración del pipeline HTTP
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
