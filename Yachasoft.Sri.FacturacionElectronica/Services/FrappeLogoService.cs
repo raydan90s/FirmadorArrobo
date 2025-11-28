@@ -46,9 +46,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     };
                 }
 
-                Console.WriteLine($"\n🖼️ ═══════════════════════════════════════════════");
-                Console.WriteLine($"🖼️ OBTENIENDO LOGO PARA: {emisor}");
-                Console.WriteLine($"🖼️ ═══════════════════════════════════════════════");
+
 
                 var apiUrl = $"{_settings.Url.TrimEnd('/')}/api/method/sri.sri.doctype.certificado_electronico.certificado_electronico.obtener_logo";
 
@@ -66,27 +64,24 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 if (!string.IsNullOrEmpty(apiKey) && !string.IsNullOrEmpty(apiSecret))
                 {
                     req.Headers.Add("Authorization", $"token {apiKey}:{apiSecret}");
-                    Console.WriteLine($"🔑 Usando credenciales del EMISOR");
-                    Console.WriteLine($"   API Key: {apiKey.Substring(0, Math.Min(8, apiKey.Length))}...");
+
                 }
                 else
                 {
                     req.Headers.Add("Authorization", $"token {_settings.ApiKey}:{_settings.ApiSecret}");
-                    Console.WriteLine($"⚠️ Usando credenciales por DEFAULT (appsettings.json)");
-                    Console.WriteLine($"⚠️ Puede que no tenga permisos para este emisor");
+
                 }
 
-                Console.WriteLine($"📡 URL: {apiUrl}");
+
 
                 var res = await _httpClient.SendAsync(req);
                 var responseBody = await res.Content.ReadAsStringAsync();
 
-                Console.WriteLine($"📥 Status Code: {res.StatusCode}");
+
 
                 if (!res.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"❌ ERROR HTTP {res.StatusCode}");
-                    Console.WriteLine($"📋 Response: {responseBody}");
+
 
                     return new ObtenerLogoResult
                     {
@@ -95,13 +90,13 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     };
                 }
 
-                Console.WriteLine($"📋 Respuesta recibida ({responseBody.Length} caracteres)");
+
 
                 using var doc = JsonDocument.Parse(responseBody);
 
                 if (!doc.RootElement.TryGetProperty("message", out var message))
                 {
-                    Console.WriteLine($"❌ Respuesta inválida: no contiene 'message'");
+
                     return new ObtenerLogoResult
                     {
                         Success = false,
@@ -116,7 +111,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                         ? errProp.GetString()
                         : "Error desconocido desde Frappe";
 
-                    Console.WriteLine($"❌ FRAPPE: success=false => {errorMsg}");
+
 
                     return new ObtenerLogoResult
                     {
@@ -128,7 +123,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 // EXTRAER LOGO
                 if (!message.TryGetProperty("logo", out var logo))
                 {
-                    Console.WriteLine($"⚠️ No se encontró 'logo' en la respuesta");
+
                     return new ObtenerLogoResult
                     {
                         Success = false,
@@ -138,7 +133,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
 
                 if (!logo.TryGetProperty("contenido_base64", out var base64Prop))
                 {
-                    Console.WriteLine($"⚠️ No se encontró 'contenido_base64'");
+
                     return new ObtenerLogoResult
                     {
                         Success = false,
@@ -149,7 +144,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 string base64 = base64Prop.GetString();
                 if (string.IsNullOrEmpty(base64))
                 {
-                    Console.WriteLine($"⚠️ Base64 del logo vacío");
+
                     return new ObtenerLogoResult
                     {
                         Success = false,
@@ -163,11 +158,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     nombreArchivo = nombreProp.GetString();
                 }
 
-                Console.WriteLine($"\n✅ LOGO OBTENIDO:");
-                Console.WriteLine($"   ✓ Emisor: {emisor}");
-                Console.WriteLine($"   ✓ Archivo: {nombreArchivo ?? "N/A"}");
-                Console.WriteLine($"   ✓ Tamaño Base64: {base64.Length}");
-                Console.WriteLine($"🖼️ ═══════════════════════════════════════════════\n");
+
 
                 return new ObtenerLogoResult
                 {
@@ -179,10 +170,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"\n❌ EXCEPCIÓN AL OBTENER LOGO");
-                Console.WriteLine($"📋 Tipo: {ex.GetType().Name}");
-                Console.WriteLine($"📋 Mensaje: {ex.Message}");
-                Console.WriteLine($"📋 StackTrace: {ex.StackTrace}");
+
 
                 return new ObtenerLogoResult
                 {

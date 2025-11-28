@@ -52,7 +52,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
         [HttpPost("GenerarFactura")]
         public async Task<IActionResult> GenerarFactura([FromBody] FacturaRequest request)
         {
-            // 🔥 FIX CRÍTICO: Configurar TLS antes de cualquier comunicación con el SRI
+
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
             ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
 
@@ -62,15 +62,10 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
 
             try
             {
-                Console.WriteLine($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-                Console.WriteLine($"📝 INICIANDO GENERACIÓN DE FACTURA");
-                Console.WriteLine($"👤 Emisor: {request.Emisor.RazonSocial}");
-                Console.WriteLine($"🆔 RUC: {request.Emisor.RUC}");
-                Console.WriteLine($"📅 Fecha: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-                Console.WriteLine($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
 
                 // 🔥 PASO 0: OBTENER CREDENCIALES DEL EMISOR PRIMERO
-                Console.WriteLine($"\n🔑 PASO 0: Obteniendo credenciales del emisor...");
+
                 var credenciales = await _frappeCredentialsService.ObtenerCredencialesAsync(request.Emisor.RazonSocial);
 
                 string apiKey = null;
@@ -87,21 +82,11 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     apiSecret = credenciales.ApiSecret;
                     usandoCredencialesEmisor = true;
 
-                    Console.WriteLine($"✅ Credenciales del emisor obtenidas correctamente");
-                    Console.WriteLine($"👤 Emisor: {credenciales.Emisor}");
-                    Console.WriteLine($"🔑 API Key: {apiKey?.Substring(0, Math.Min(8, apiKey?.Length ?? 0))}...");
-                }
-                else
-                {
-                    Console.WriteLine($"⚠️ No se obtuvieron credenciales del emisor");
-                    Console.WriteLine($"   Razón: {credenciales.Error}");
-                    Console.WriteLine($"   TieneApiKey: {credenciales.TieneApiKey}");
-                    Console.WriteLine($"   TieneApiSecret: {credenciales.TieneApiSecret}");
-                    Console.WriteLine($"📌 Se intentará con credenciales por defecto (puede fallar)");
+
                 }
 
-                // 1️⃣ Verificar certificado en Frappe (CON CREDENCIALES CORRECTAS)
-                Console.WriteLine($"\n🔍 PASO 1: Verificando certificado en Frappe...");
+
+
                 var verificacion = await _frappeCertService.VerificarCertificadoAsync(
                     request.Emisor.RazonSocial,
                     apiKey,
@@ -110,7 +95,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
 
                 if (!verificacion.Success)
                 {
-                    Console.WriteLine($"❌ ERROR: Falló la verificación del certificado");
+
                     return BadRequest(new
                     {
                         success = false,
@@ -125,7 +110,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
 
                 if (!verificacion.Vigente)
                 {
-                    Console.WriteLine($"❌ ERROR: Certificado no vigente");
+
                     return BadRequest(new
                     {
                         success = false,
@@ -142,12 +127,9 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     });
                 }
 
-                Console.WriteLine($"✅ Certificado vigente encontrado");
-                Console.WriteLine($"📄 Archivo: {verificacion.NombreArchivo}");
-                Console.WriteLine($"📅 Vencimiento: {verificacion.FechaVencimiento}");
 
-                // 2️⃣ Descargar certificado desde Frappe (CON CREDENCIALES CORRECTAS)
-                Console.WriteLine($"\n🔐 PASO 2: Descargando certificado digital desde Frappe...");
+
+
                 var certificado = await _frappeCertService.ObtenerCertificadoAsync(
                     request.Emisor.RazonSocial,
                     apiKey,
@@ -156,8 +138,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
 
                 if (!certificado.Success)
                 {
-                    Console.WriteLine($"❌ ERROR: No se pudo descargar el certificado");
-                    Console.WriteLine($"   Detalle: {certificado.Error}");
+
 
                     return BadRequest(new
                     {
@@ -167,13 +148,11 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     });
                 }
 
-                Console.WriteLine($"✅ Certificado descargado exitosamente");
-                Console.WriteLine($"📦 Tamaño Base64: {certificado.CertificadoBase64?.Length ?? 0} caracteres");
-                Console.WriteLine($"🔑 Contraseña: {(string.IsNullOrEmpty(certificado.Contrasena) ? "❌ NO RECIBIDA" : "✅ OK")}");
+
 
                 if (string.IsNullOrEmpty(certificado.Contrasena))
                 {
-                    Console.WriteLine($"❌ ERROR CRÍTICO: No se recibió la contraseña del certificado");
+
                     return BadRequest(new
                     {
                         success = false,
@@ -181,19 +160,18 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     });
                 }
 
-                // 3️⃣ Cargar certificado en memoria
-                Console.WriteLine($"\n🔏 PASO 3: Cargando certificado en el servicio de firma...");
+
                 try
                 {
                     _certificadoService.CargarDesdeBase64String(
                         certificado.CertificadoBase64,
                         certificado.Contrasena
                     );
-                    Console.WriteLine($"✅ Certificado cargado correctamente en memoria");
+
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"❌ ERROR al cargar el certificado: {ex.Message}");
+
                     return BadRequest(new
                     {
                         success = false,
@@ -202,12 +180,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     });
                 }
 
-                // 4️⃣ Obtener logo desde Frappe
-                Console.WriteLine($"\n🖼️ PASO 4: Obteniendo logo desde Frappe...");
-                Console.WriteLine("════ CREDENCIALES EN CONTROLLER LOGO ════");
-                Console.WriteLine($"API KEY CONTROLLER: '{apiKey}'");
-                Console.WriteLine($"API SECRET CONTROLLER: '{apiSecret}'");
-                Console.WriteLine("═══════════════════════════════════════");
+
 
                 var logoResult = await _frappeLogoService.ObtenerLogoAsync(
                 request.Emisor.RazonSocial,
@@ -218,7 +191,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
 
                 if (logoResult.Success && !string.IsNullOrWhiteSpace(logoResult.LogoBase64))
                 {
-                    Console.WriteLine($"✅ Logo obtenido: {logoResult.NombreArchivo}");
+
 
                     var logoFileName = $"logo_{request.Emisor.RUC}_{DateTime.Now:yyyyMMddHHmmss}.png";
                     logoPath = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", logoFileName);
@@ -226,16 +199,11 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     var logoBytes = Convert.FromBase64String(logoResult.LogoBase64);
                     await System.IO.File.WriteAllBytesAsync(logoPath, logoBytes);
 
-                    Console.WriteLine($"💾 Logo guardado temporalmente: {logoFileName}");
-                }
-                else
-                {
-                    Console.WriteLine($"⚠️ No se pudo obtener logo: {logoResult.Error}");
-                    Console.WriteLine($"📌 Se generará la factura sin logo");
+
                 }
 
-                // 5️⃣ Construir estructura de la factura
-                Console.WriteLine($"\n📋 PASO 5: Construyendo estructura de la factura...");
+
+
 
                 var emisor = new Emisor
                 {
@@ -308,12 +276,9 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     factura.InfoTributaria.EnumTipoEmision
                 );
 
-                Console.WriteLine($"✅ Factura construida");
-                Console.WriteLine($"🔑 Clave de acceso: {factura.InfoTributaria.ClaveAcceso}");
-                Console.WriteLine($"📄 Secuencial: {factura.InfoTributaria.Secuencial}");
 
-                // 6️⃣ Generar y firmar XML
-                Console.WriteLine($"\n✍️ PASO 6: Generando y firmando XML...");
+
+
                 var xmlObj = Factura_1_0_0Mapper.Map(factura);
 
                 var xmlDoc = new XmlDocument();
@@ -331,34 +296,24 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 var nombreArchivoXml = $"FACTURA_{factura.InfoTributaria.ClaveAcceso}.xml";
                 rutaXmlLocal = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", nombreArchivoXml);
                 xmlFirmado.Save(rutaXmlLocal);
-                Console.WriteLine($"✅ XML firmado guardado: {nombreArchivoXml}");
 
-                // 7️⃣ Enviar al SRI
-                Console.WriteLine($"\n📤 PASO 7: Enviando comprobante al SRI...");
+
+
                 var envio = await _webService.ValidarComprobanteAsync(xmlFirmado);
 
-                Console.WriteLine($"📊 Respuesta del SRI (envío):");
-                Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(envio, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+
 
                 if (!envio.Ok)
                 {
-                    Console.WriteLine($"\n❌ ERROR EN EL ENVÍO AL SRI");
+
                     var primerComprobante = envio.Data?.Comprobantes?.Comprobante?.FirstOrDefault();
                     var mensajesEnvio = primerComprobante?.Mensajes?.Mensaje
                         ?.Select(m => new { m.Identificador, m.Mensaje_, m.Tipo, m.InformacionAdicional })
                         .ToList();
 
-                    Console.WriteLine($"📋 Estado: {envio.Data?.Estado}");
-                    Console.WriteLine($"📋 Error: {envio.Error}");
 
-                    if (mensajesEnvio != null && mensajesEnvio.Any())
-                    {
-                        Console.WriteLine($"📋 Mensajes:");
-                        foreach (var msg in mensajesEnvio)
-                        {
-                            Console.WriteLine($"   - [{msg.Tipo}] {msg.Mensaje_}");
-                        }
-                    }
+
+                 
 
                     return Ok(new
                     {
@@ -369,22 +324,17 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     });
                 }
 
-                Console.WriteLine($"✅ Comprobante recibido por el SRI");
-                Console.WriteLine($"⏳ Esperando 3 segundos antes de solicitar autorización...");
+
                 await Task.Delay(3000);
 
-                // 8️⃣ Consultar autorización
-                Console.WriteLine($"\n🔍 PASO 8: Consultando autorización...");
+
                 var auto = await _webService.AutorizacionComprobanteAsync(factura.InfoTributaria.ClaveAcceso);
                 var autorizacionData = auto.Data?.Autorizaciones?.Autorizacion?.FirstOrDefault();
 
-                Console.WriteLine($"📊 Respuesta de autorización:");
-                Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(auto, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
 
                 if (!auto.Ok)
                 {
-                    Console.WriteLine($"\n❌ COMPROBANTE NO AUTORIZADO");
-                    Console.WriteLine($"📋 Estado: {autorizacionData?.Estado}");
+
 
                     var mensajesAutorizacion = autorizacionData?.Mensajes?.Mensaje
                         ?.Select(m => new { m.Identificador, m.Mensaje_, m.Tipo, m.InformacionAdicional })
@@ -398,7 +348,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     });
                 }
 
-                Console.WriteLine($"\n🎉 ¡COMPROBANTE AUTORIZADO!");
+
 
                 // Actualizar datos de autorización
                 if (autorizacionData != null)
@@ -413,26 +363,23 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                         throw new Exception($"Fecha de autorización inválida: {autorizacionData.FechaAutorizacion}");
                     }
 
-                    Console.WriteLine($"📋 Número de autorización: {factura.Autorizacion.Numero}");
-                    Console.WriteLine($"📅 Fecha de autorización: {factura.Autorizacion.Fecha:yyyy-MM-dd HH:mm:ss}");
+
                 }
 
-                // 9️⃣ Generar PDF (RIDE)
-                Console.WriteLine($"\n📄 PASO 9: Generando RIDE (PDF)...");
+
                 var nombrePdf = $"FACTURA_{factura.InfoTributaria.ClaveAcceso}.pdf";
                 rutaPDF = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", nombrePdf);
                 _rideService.Factura_1_0_0(factura, rutaPDF);
-                Console.WriteLine($"✅ PDF generado: {nombrePdf}");
 
-                // 🔟 Subir archivos a Frappe
-                Console.WriteLine($"\n☁️ PASO 10: Subiendo archivos a Frappe...");
+
+
 
                 FrappeUploadResult respuestaUploadPDF;
                 FrappeUploadResult respuestaUploadXML;
 
                 if (usandoCredencialesEmisor)
                 {
-                    Console.WriteLine($"📌 Usando credenciales del emisor para subir archivos");
+
 
                     respuestaUploadPDF = await _frappeUploader.UploadFileAsync(
                         filePath: rutaPDF,
@@ -452,7 +399,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 }
                 else
                 {
-                    Console.WriteLine($"📌 Usando credenciales por defecto para subir archivos");
+
 
                     respuestaUploadPDF = await _frappeUploader.UploadFileAsync(
                         filePath: rutaPDF,
@@ -467,27 +414,12 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     );
                 }
 
-                Console.WriteLine($"✅ PDF subido: {respuestaUploadPDF.Success}");
-                Console.WriteLine($"✅ XML subido: {respuestaUploadXML.Success}");
 
-                if (!respuestaUploadPDF.Success)
-                {
-                    Console.WriteLine($"⚠️ Error subiendo PDF: {respuestaUploadPDF.Error}");
-                }
 
-                if (!respuestaUploadXML.Success)
-                {
-                    Console.WriteLine($"⚠️ Error subiendo XML: {respuestaUploadXML.Error}");
-                }
+               
 
-                // 1️⃣1️⃣ Limpiar archivos temporales
-                Console.WriteLine($"\n🗑️ PASO 11: Limpiando archivos temporales...");
                 await LimpiarArchivosTemporales(rutaPDF, rutaXmlLocal, logoPath);
-                Console.WriteLine($"✅ Archivos temporales eliminados");
 
-                Console.WriteLine($"\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-                Console.WriteLine($"✅ PROCESO COMPLETADO EXITOSAMENTE");
-                Console.WriteLine($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
                 return Ok(new
                 {
@@ -503,14 +435,9 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"\n❌❌❌ ERROR CRÍTICO ❌❌❌");
-                Console.WriteLine($"Mensaje: {ex.Message}");
-                Console.WriteLine($"StackTrace: {ex.StackTrace}");
 
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
-                }
+
+                
 
                 return BadRequest(new
                 {
@@ -536,11 +463,11 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     try
                     {
                         await FileCleanupHelper.DeleteFileAsync(ruta);
-                        Console.WriteLine($"🗑️ Archivo eliminado: {Path.GetFileName(ruta)}");
+                        Console.WriteLine($"Archivo eliminado: {Path.GetFileName(ruta)}");
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"⚠️ No se pudo eliminar {Path.GetFileName(ruta)}: {ex.Message}");
+                        Console.WriteLine($"No se pudo eliminar {Path.GetFileName(ruta)}: {ex.Message}");
                     }
                 }
             }

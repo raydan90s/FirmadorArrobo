@@ -19,8 +19,7 @@ namespace Yachasoft.Sri.FacturacionElectronica
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
             ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
             
-            System.Console.WriteLine("🔐 Configuración TLS/SSL aplicada globalmente");
-            System.Console.WriteLine($"📋 Protocolos habilitados: {ServicePointManager.SecurityProtocol}");
+ 
         }
 
         public IConfiguration Configuration { get; }
@@ -50,12 +49,7 @@ namespace Yachasoft.Sri.FacturacionElectronica
             services.AddHttpClient<IFrappeCredentialsService, FrappeCredentialsService>();
             services.AddHttpClient<IFrappeFileUploader, FrappeFileUploader>();
 
-            // Registro del core SRI
-            services.AddSRIDocumentosElectronicos(options =>
-            {
-                options.WebService.TipoAmbiente = Core.Enumerados.EnumTipoAmbiente.Prueba;
-                options.WebService.TipoEsquema = Core.Enumerados.EnumTipoEsquema.Offline;
-            });
+            
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

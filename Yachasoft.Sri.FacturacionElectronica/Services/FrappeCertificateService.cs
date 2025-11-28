@@ -58,7 +58,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             if (!Directory.Exists(_tempFolder))
             {
                 Directory.CreateDirectory(_tempFolder);
-                Console.WriteLine($"📁 Carpeta temporal creada: {_tempFolder}");
+               
             }
         }
 
@@ -72,9 +72,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
         {
             try
             {
-                Console.WriteLine($"\n🔍 ═══════════════════════════════════════════════");
-                Console.WriteLine($"🔍 VERIFICANDO CERTIFICADO PARA: {emisor}");
-                Console.WriteLine($"🔍 ═══════════════════════════════════════════════");
+                
 
                 var apiUrl = $"{_settings.Url.TrimEnd('/')}/api/method/sri.sri.doctype.certificado_electronico.certificado_electronico.verificar_certificado";
 
@@ -92,27 +90,25 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 if (!string.IsNullOrEmpty(apiKey) && !string.IsNullOrEmpty(apiSecret))
                 {
                     req.Headers.Add("Authorization", $"token {apiKey}:{apiSecret}");
-                    Console.WriteLine($"🔑 Usando credenciales del emisor");
-                    Console.WriteLine($"   API Key: {apiKey.Substring(0, Math.Min(8, apiKey.Length))}...");
+                  
                 }
                 else
                 {
                     req.Headers.Add("Authorization", $"token {_settings.ApiKey}:{_settings.ApiSecret}");
-                    Console.WriteLine($"🔑 Usando credenciales por defecto (appsettings.json)");
-                    Console.WriteLine($"   ⚠️ ADVERTENCIA: Puede no tener permisos para este emisor");
+                    
+                    
                 }
 
-                Console.WriteLine($"📡 URL: {apiUrl}");
+                
 
                 var res = await _httpClient.SendAsync(req);
                 var responseBody = await res.Content.ReadAsStringAsync();
 
-                Console.WriteLine($"📥 Status Code: {res.StatusCode}");
+                
 
                 if (!res.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"❌ Error HTTP {res.StatusCode}");
-                    Console.WriteLine($"📋 Response: {responseBody}");
+            
                     
                     return new VerificarCertificadoResult
                     {
@@ -122,13 +118,13 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     };
                 }
 
-                Console.WriteLine($"📋 Respuesta recibida ({responseBody.Length} caracteres)");
+                
                 
                 using var doc = JsonDocument.Parse(responseBody);
 
                 if (!doc.RootElement.TryGetProperty("message", out var message))
                 {
-                    Console.WriteLine($"❌ Respuesta inválida: no contiene 'message'");
+                    
                     return new VerificarCertificadoResult
                     {
                         Success = false,
@@ -155,14 +151,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
 
                 bool vigente = tieneVigente && tieneArchivo && tienePassword;
                 
-                Console.WriteLine($"\n📊 RESULTADO DE VERIFICACIÓN:");
-                Console.WriteLine($"   ✓ Vigente: {tieneVigente}");
-                Console.WriteLine($"   ✓ Tiene archivo: {tieneArchivo}");
-                Console.WriteLine($"   ✓ Tiene password: {tienePassword}");
-                Console.WriteLine($"   ✓ Nombre archivo: {nombreArchivo ?? "N/A"}");
-                Console.WriteLine($"   ✓ Fecha vencimiento: {fechaVencimiento ?? "N/A"}");
-                Console.WriteLine($"   ✓ ESTADO FINAL: {(vigente ? "✅ VÁLIDO" : "❌ INVÁLIDO")}");
-                Console.WriteLine($"🔍 ═══════════════════════════════════════════════\n");
+              
 
                 return new VerificarCertificadoResult
                 {
@@ -176,10 +165,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"\n❌ EXCEPCIÓN AL VERIFICAR CERTIFICADO");
-                Console.WriteLine($"📋 Tipo: {ex.GetType().Name}");
-                Console.WriteLine($"📋 Mensaje: {ex.Message}");
-                Console.WriteLine($"📋 StackTrace: {ex.StackTrace}");
+              
                 
                 return new VerificarCertificadoResult
                 {
@@ -209,9 +195,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     };
                 }
 
-                Console.WriteLine($"\n📥 ═══════════════════════════════════════════════");
-                Console.WriteLine($"📥 OBTENIENDO CERTIFICADO PARA: {emisor}");
-                Console.WriteLine($"📥 ═══════════════════════════════════════════════");
+              
 
                 var apiUrl = $"{_settings.Url.TrimEnd('/')}/api/method/sri.sri.doctype.certificado_electronico.certificado_electronico.obtener_certificado";
 
@@ -229,27 +213,24 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 if (!string.IsNullOrEmpty(apiKey) && !string.IsNullOrEmpty(apiSecret))
                 {
                     req.Headers.Add("Authorization", $"token {apiKey}:{apiSecret}");
-                    Console.WriteLine($"🔑 Usando credenciales del emisor");
-                    Console.WriteLine($"   API Key: {apiKey.Substring(0, Math.Min(8, apiKey.Length))}...");
+                  
                 }
                 else
                 {
                     req.Headers.Add("Authorization", $"token {_settings.ApiKey}:{_settings.ApiSecret}");
-                    Console.WriteLine($"🔑 Usando credenciales por defecto");
-                    Console.WriteLine($"   ⚠️ ADVERTENCIA: Puede no tener permisos");
+                
                 }
 
-                Console.WriteLine($"📡 URL: {apiUrl}");
+             
 
                 var res = await _httpClient.SendAsync(req);
                 var responseBody = await res.Content.ReadAsStringAsync();
 
-                Console.WriteLine($"📥 Status Code: {res.StatusCode}");
+                
 
                 if (!res.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"❌ Error HTTP {res.StatusCode}");
-                    Console.WriteLine($"📋 Response: {responseBody}");
+                   
                     
                     return new ObtenerCertificadoResult
                     {
@@ -258,13 +239,13 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     };
                 }
 
-                Console.WriteLine($"📋 Respuesta recibida ({responseBody.Length} caracteres)");
+                
 
                 using var doc = JsonDocument.Parse(responseBody);
                 
                 if (!doc.RootElement.TryGetProperty("message", out var message))
                 {
-                    Console.WriteLine($"❌ Respuesta inválida: no contiene 'message'");
+                   
                     return new ObtenerCertificadoResult
                     {
                         Success = false,
@@ -279,7 +260,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                         ? errProp.GetString() 
                         : "Error desconocido desde Frappe";
                     
-                    Console.WriteLine($"❌ Frappe retornó success=false: {errorMsg}");
+                   
                     
                     return new ObtenerCertificadoResult
                     {
@@ -291,7 +272,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 // Extraer el archivo en base64
                 if (!message.TryGetProperty("archivo", out var archivo))
                 {
-                    Console.WriteLine($"❌ No se encontró 'archivo' en la respuesta");
+                   
                     return new ObtenerCertificadoResult
                     {
                         Success = false,
@@ -301,7 +282,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
 
                 if (!archivo.TryGetProperty("contenido_base64", out var base64Prop))
                 {
-                    Console.WriteLine($"❌ No se encontró 'contenido_base64'");
+                  
                     return new ObtenerCertificadoResult
                     {
                         Success = false,
@@ -312,7 +293,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 var base64Content = base64Prop.GetString();
                 if (string.IsNullOrEmpty(base64Content))
                 {
-                    Console.WriteLine($"❌ El contenido base64 está vacío");
+                    
                     return new ObtenerCertificadoResult
                     {
                         Success = false,
@@ -327,14 +308,8 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     password = passProp.GetString();
                 }
 
-                if (string.IsNullOrEmpty(password))
-                {
-                    Console.WriteLine($"⚠️ ADVERTENCIA: No se recibió contraseña del certificado");
-                }
-                else
-                {
-                    Console.WriteLine($"🔑 Contraseña recibida correctamente");
-                }
+              
+                
 
                 // Extraer nombre del archivo
                 string nombreArchivo = null;
@@ -343,12 +318,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     nombreArchivo = nombreProp.GetString();
                 }
 
-                Console.WriteLine($"\n📊 CERTIFICADO OBTENIDO:");
-                Console.WriteLine($"   ✓ Emisor: {emisor}");
-                Console.WriteLine($"   ✓ Nombre archivo: {nombreArchivo ?? "N/A"}");
-                Console.WriteLine($"   ✓ Tamaño Base64: {base64Content.Length} caracteres");
-                Console.WriteLine($"   ✓ Tiene contraseña: {!string.IsNullOrEmpty(password)}");
-                Console.WriteLine($"📥 ═══════════════════════════════════════════════\n");
+               
 
                 return new ObtenerCertificadoResult
                 {
@@ -361,10 +331,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"\n❌ EXCEPCIÓN AL OBTENER CERTIFICADO");
-                Console.WriteLine($"📋 Tipo: {ex.GetType().Name}");
-                Console.WriteLine($"📋 Mensaje: {ex.Message}");
-                Console.WriteLine($"📋 StackTrace: {ex.StackTrace}");
+                
                 
                 return new ObtenerCertificadoResult
                 {
@@ -407,7 +374,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     };
                 }
 
-                Console.WriteLine($"📦 Certificado decodificado: {bytes.Length} bytes");
+             
 
                 var fileName = !string.IsNullOrEmpty(certificado.NombreArchivo)
                     ? certificado.NombreArchivo
@@ -418,20 +385,19 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 
                 await File.WriteAllBytesAsync(tempPath, bytes);
 
-                Console.WriteLine($"✅ Certificado guardado en: {tempPath}");
+              
                 
                 // Validar certificado
                 try
                 {
-                    Console.WriteLine($"🧪 Validando certificado con la contraseña...");
+                   
                     var testCert = new System.Security.Cryptography.X509Certificates.X509Certificate2(tempPath, certificado.Contrasena);
-                    Console.WriteLine($"✅ ¡Certificado validado correctamente!");
-                    Console.WriteLine($"📋 Subject: {testCert.Subject}");
+                    
                     testCert.Dispose();
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"❌ ERROR al validar certificado: {ex.Message}");
+                    
                     return new DownloadCertificateResult
                     {
                         success = false,
@@ -451,7 +417,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Excepción al descargar certificado: {ex.Message}");
+                
                 return new DownloadCertificateResult
                 {
                     success = false,
@@ -480,14 +446,11 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     }
                 }
 
-                if (deletedCount > 0)
-                {
-                    Console.WriteLine($"🗑️ {deletedCount} certificado(s) temporal(es) eliminado(s)");
-                }
+               
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"⚠️ Error al limpiar certificados temporales: {ex.Message}");
+                
             }
         }
 
@@ -498,12 +461,12 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
                 {
                     File.Delete(filePath);
-                    Console.WriteLine($"🗑️ Certificado temporal eliminado: {Path.GetFileName(filePath)}");
+                   
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"⚠️ Error al eliminar certificado: {ex.Message}");
+                
             }
         }
     }

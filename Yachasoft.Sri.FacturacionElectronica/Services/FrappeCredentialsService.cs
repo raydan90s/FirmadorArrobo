@@ -42,22 +42,18 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             
             _httpClient = httpClient;
 
-            Console.WriteLine($"✅ FrappeCredentialsService inicializado");
-            Console.WriteLine($"🌐 URL Base: {_frappeUrl}");
-            Console.WriteLine($"📌 Endpoint público (sin autenticación requerida)");
+         
         }
 
         public async Task<FrappeCredentialsResult> ObtenerCredencialesAsync(string emisor)
         {
             try
             {
-                Console.WriteLine($"\n🔐 ═══════════════════════════════════════════════");
-                Console.WriteLine($"🔐 OBTENIENDO CREDENCIALES PARA: {emisor}");
-                Console.WriteLine($"🔐 ═══════════════════════════════════════════════");
+              
 
                 // 🔥 Endpoint público que retorna credenciales del emisor
                 var endpoint = "/api/method/sri.sri.doctype.certificado_electronico.certificado_electronico.obtener_apikeys";
-                Console.WriteLine($"📡 Endpoint: {endpoint}");
+               
 
                 // ✅ Construir el payload JSON
                 var payload = new JObject
@@ -65,7 +61,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     ["emisor"] = emisor
                 };
 
-                Console.WriteLine($"📤 Payload: {payload}");
+                
 
                 // 🚀 Hacer la petición POST
                 var content = new StringContent(
@@ -77,12 +73,11 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 var response = await _httpClient.PostAsync(endpoint, content);
                 var jsonResponse = await response.Content.ReadAsStringAsync();
 
-                Console.WriteLine($"📥 Status Code: {response.StatusCode}");
+               
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"❌ Error HTTP {response.StatusCode}");
-                    Console.WriteLine($"📋 Response Body: {jsonResponse}");
+                    
                     return new FrappeCredentialsResult
                     {
                         Success = false,
@@ -95,8 +90,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 var json = JObject.Parse(jsonResponse);
                 var message = json["message"];
 
-                Console.WriteLine($"📋 Respuesta del servidor:");
-                Console.WriteLine(message?.ToString(Newtonsoft.Json.Formatting.Indented));
+             
 
                 // ✅ Validar campo "success"
                 var success = message?["success"]?.Value<bool>() ?? false;
@@ -104,7 +98,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 if (!success)
                 {
                     var error = message?["error"]?.ToString() ?? "El servidor retornó success=false";
-                    Console.WriteLine($"❌ {error}");
+                
                     
                     return new FrappeCredentialsResult
                     {
@@ -120,18 +114,13 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 var tieneApiKey = message?["tiene_api_key"]?.Value<bool>() ?? false;
                 var tieneApiSecret = message?["tiene_api_secret"]?.Value<bool>() ?? false;
 
-                Console.WriteLine($"\n📊 RESULTADO:");
-                Console.WriteLine($"   ✓ Emisor: {message?["emisor"]}");
-                Console.WriteLine($"   ✓ Tiene API Key: {tieneApiKey}");
-                Console.WriteLine($"   ✓ Tiene API Secret: {tieneApiSecret}");
+            
 
                 // ⚠️ Validar que las credenciales existan
                 if (!tieneApiKey || !tieneApiSecret || 
                     string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(apiSecret))
                 {
-                    Console.WriteLine($"\n⚠️ ADVERTENCIA: Credenciales incompletas");
-                    Console.WriteLine($"   - API Key válida: {!string.IsNullOrWhiteSpace(apiKey) && tieneApiKey}");
-                    Console.WriteLine($"   - API Secret válida: {!string.IsNullOrWhiteSpace(apiSecret) && tieneApiSecret}");
+                   
                     
                     return new FrappeCredentialsResult
                     {
@@ -143,11 +132,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     };
                 }
 
-                // ✅ Todo correcto
-                Console.WriteLine($"\n✅ CREDENCIALES OBTENIDAS EXITOSAMENTE");
-                Console.WriteLine($"🔑 API Key: {apiKey.Substring(0, Math.Min(10, apiKey.Length))}...");
-                Console.WriteLine($"🔐 API Secret: {apiSecret.Substring(0, Math.Min(10, apiSecret.Length))}...");
-                Console.WriteLine($"🔐 ═══════════════════════════════════════════════\n");
+                
 
                 return new FrappeCredentialsResult
                 {
@@ -161,9 +146,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             }
             catch (HttpRequestException httpEx)
             {
-                Console.WriteLine($"\n❌ ERROR DE CONEXIÓN HTTP");
-                Console.WriteLine($"📋 Mensaje: {httpEx.Message}");
-                Console.WriteLine($"📋 Inner Exception: {httpEx.InnerException?.Message}");
+                
                 
                 return new FrappeCredentialsResult
                 {
@@ -174,10 +157,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"\n❌ ERROR INESPERADO");
-                Console.WriteLine($"📋 Tipo: {ex.GetType().Name}");
-                Console.WriteLine($"📋 Mensaje: {ex.Message}");
-                Console.WriteLine($"📋 StackTrace: {ex.StackTrace}");
+              
                 
                 return new FrappeCredentialsResult
                 {
