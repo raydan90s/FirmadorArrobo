@@ -263,7 +263,7 @@
           "runtimes/win-x64/native/libwinpthread-1.dll": {
             "rid": "win-x64",
             "assetType": "native",
-            "fileVersion": "1.0.0.0"
+            "fileVersion": "0.0.0.0"
           },
           "runtimes/win-x64/native/qpdf.dll": {
             "rid": "win-x64",
@@ -288,7 +288,7 @@
           "runtimes/win-x86/native/libwinpthread-1.dll": {
             "rid": "win-x86",
             "assetType": "native",
-            "fileVersion": "1.0.0.0"
+            "fileVersion": "0.0.0.0"
           },
           "runtimes/win-x86/native/qpdf.dll": {
             "rid": "win-x86",
@@ -430,10 +430,7 @@
           "System.Security.Cryptography.Xml": "5.0.0-rc.2.20475.5"
         },
         "runtime": {
-          "FirmaXadesNet.dll": {
-            "assemblyVersion": "2.2.1.0",
-            "fileVersion": "2.2.1.0"
-          }
+          "FirmaXadesNet.dll": {}
         }
       },
       "Microsoft.Xades/1.0.0": {
@@ -441,18 +438,12 @@
           "System.Security.Cryptography.Xml": "5.0.0-rc.2.20475.5"
         },
         "runtime": {
-          "Microsoft.Xades.dll": {
-            "assemblyVersion": "1.0.7.0",
-            "fileVersion": "1.0.7.0"
-          }
+          "Microsoft.Xades.dll": {}
         }
       },
       "Yachasoft.Core/1.0.0": {
         "runtime": {
-          "Yachasoft.Core.dll": {
-            "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.0.0.0"
-          }
+          "Yachasoft.Core.dll": {}
         }
       },
       "Yachasoft.Pdf/1.0.0": {
@@ -460,10 +451,7 @@
           "PdfSharpCore": "1.3.18"
         },
         "runtime": {
-          "Yachasoft.Pdf.dll": {
-            "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.0.0.0"
-          }
+          "Yachasoft.Pdf.dll": {}
         }
       },
       "Yachasoft.Sri.Core/1.0.0": {
@@ -471,10 +459,7 @@
           "Yachasoft.Core": "1.0.0"
         },
         "runtime": {
-          "Yachasoft.Sri.Core.dll": {
-            "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.0.0.0"
-          }
+          "Yachasoft.Sri.Core.dll": {}
         }
       },
       "Yachasoft.Sri.Modelos/1.0.0": {
@@ -482,10 +467,7 @@
           "Yachasoft.Sri.Core": "1.0.0"
         },
         "runtime": {
-          "Yachasoft.Sri.Modelos.dll": {
-            "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.0.0.0"
-          }
+          "Yachasoft.Sri.Modelos.dll": {}
         }
       },
       "Yachasoft.Sri.Ride/1.0.0": {
@@ -496,10 +478,7 @@
           "Yachasoft.Sri.Modelos": "1.0.0"
         },
         "runtime": {
-          "Yachasoft.Sri.Ride.dll": {
-            "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.0.0.0"
-          }
+          "Yachasoft.Sri.Ride.dll": {}
         }
       },
       "Yachasoft.Sri.Signer/1.0.0": {
@@ -508,10 +487,7 @@
           "Microsoft.Extensions.Logging.Abstractions": "5.0.0"
         },
         "runtime": {
-          "Yachasoft.Sri.Signer.dll": {
-            "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.0.0.0"
-          }
+          "Yachasoft.Sri.Signer.dll": {}
         }
       },
       "Yachasoft.Sri.WebService/1.0.0": {
@@ -519,10 +495,7 @@
           "Yachasoft.Sri.Core": "1.0.0"
         },
         "runtime": {
-          "Yachasoft.Sri.WebService.dll": {
-            "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.0.0.0"
-          }
+          "Yachasoft.Sri.WebService.dll": {}
         }
       }
     }

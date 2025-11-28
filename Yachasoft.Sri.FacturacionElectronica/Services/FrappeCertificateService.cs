@@ -16,7 +16,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
         public string error { get; set; }
     }
 
-    // 🆕 NUEVO: Clase para el resultado de verificación
     public class VerificarCertificadoResult
     {
         public bool Success { get; set; }
@@ -28,7 +27,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
         public string Error { get; set; }
     }
 
-    // 🆕 NUEVO: Clase para el resultado de obtener certificado
     public class ObtenerCertificadoResult
     {
         public bool Success { get; set; }
@@ -65,16 +63,22 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
         }
 
         /// <summary>
-        /// 🆕 NUEVO MÉTODO: Verifica que el certificado exista y esté vigente
-        /// Este es el método que tu controlador necesita
+        /// 🔥 MÉTODO ACTUALIZADO: Verifica el certificado CON credenciales del emisor
         /// </summary>
-        public async Task<VerificarCertificadoResult> VerificarCertificadoAsync(string emisor)
+        public async Task<VerificarCertificadoResult> VerificarCertificadoAsync(
+            string emisor, 
+            string apiKey = null, 
+            string apiSecret = null)
         {
             try
             {
+                Console.WriteLine($"\n🔍 ═══════════════════════════════════════════════");
+                Console.WriteLine($"🔍 VERIFICANDO CERTIFICADO PARA: {emisor}");
+                Console.WriteLine($"🔍 ═══════════════════════════════════════════════");
+
                 var apiUrl = $"{_settings.Url.TrimEnd('/')}/api/method/sri.sri.doctype.certificado_electronico.certificado_electronico.verificar_certificado";
 
-                var requestBody = new { emisor = emisor };
+                var requestBody = new { emisor };
                 var jsonContent = new StringContent(
                     JsonSerializer.Serialize(requestBody),
                     Encoding.UTF8,
@@ -83,28 +87,48 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
 
                 using var req = new HttpRequestMessage(HttpMethod.Post, apiUrl);
                 req.Content = jsonContent;
-                req.Headers.Add("Authorization", $"token {_settings.ApiKey}:{_settings.ApiSecret}");
+                
+                // 🔥 USAR CREDENCIALES ESPECÍFICAS DEL EMISOR SI ESTÁN DISPONIBLES
+                if (!string.IsNullOrEmpty(apiKey) && !string.IsNullOrEmpty(apiSecret))
+                {
+                    req.Headers.Add("Authorization", $"token {apiKey}:{apiSecret}");
+                    Console.WriteLine($"🔑 Usando credenciales del emisor");
+                    Console.WriteLine($"   API Key: {apiKey.Substring(0, Math.Min(8, apiKey.Length))}...");
+                }
+                else
+                {
+                    req.Headers.Add("Authorization", $"token {_settings.ApiKey}:{_settings.ApiSecret}");
+                    Console.WriteLine($"🔑 Usando credenciales por defecto (appsettings.json)");
+                    Console.WriteLine($"   ⚠️ ADVERTENCIA: Puede no tener permisos para este emisor");
+                }
+
+                Console.WriteLine($"📡 URL: {apiUrl}");
 
                 var res = await _httpClient.SendAsync(req);
+                var responseBody = await res.Content.ReadAsStringAsync();
+
+                Console.WriteLine($"📥 Status Code: {res.StatusCode}");
+
                 if (!res.IsSuccessStatusCode)
                 {
-                    var errorBody = await res.Content.ReadAsStringAsync();
-                    Console.WriteLine($"❌ Error al verificar certificado: {res.StatusCode}");
+                    Console.WriteLine($"❌ Error HTTP {res.StatusCode}");
+                    Console.WriteLine($"📋 Response: {responseBody}");
+                    
                     return new VerificarCertificadoResult
                     {
                         Success = false,
                         Vigente = false,
-                        Error = $"Error HTTP {res.StatusCode}: {errorBody}"
+                        Error = $"Error HTTP {res.StatusCode}: {responseBody}"
                     };
                 }
 
-                var json = await res.Content.ReadAsStringAsync();
-                Console.WriteLine($"📋 Respuesta verificación: {json}");
+                Console.WriteLine($"📋 Respuesta recibida ({responseBody.Length} caracteres)");
                 
-                using var doc = JsonDocument.Parse(json);
+                using var doc = JsonDocument.Parse(responseBody);
 
                 if (!doc.RootElement.TryGetProperty("message", out var message))
                 {
+                    Console.WriteLine($"❌ Respuesta inválida: no contiene 'message'");
                     return new VerificarCertificadoResult
                     {
                         Success = false,
@@ -131,10 +155,14 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
 
                 bool vigente = tieneVigente && tieneArchivo && tienePassword;
                 
-                Console.WriteLine($"   📋 Vigente: {tieneVigente}");
-                Console.WriteLine($"   📁 Tiene archivo: {tieneArchivo}");
-                Console.WriteLine($"   🔐 Tiene password: {tienePassword}");
-                Console.WriteLine($"   ✅ Resultado final: {(vigente ? "VÁLIDO" : "INVÁLIDO")}");
+                Console.WriteLine($"\n📊 RESULTADO DE VERIFICACIÓN:");
+                Console.WriteLine($"   ✓ Vigente: {tieneVigente}");
+                Console.WriteLine($"   ✓ Tiene archivo: {tieneArchivo}");
+                Console.WriteLine($"   ✓ Tiene password: {tienePassword}");
+                Console.WriteLine($"   ✓ Nombre archivo: {nombreArchivo ?? "N/A"}");
+                Console.WriteLine($"   ✓ Fecha vencimiento: {fechaVencimiento ?? "N/A"}");
+                Console.WriteLine($"   ✓ ESTADO FINAL: {(vigente ? "✅ VÁLIDO" : "❌ INVÁLIDO")}");
+                Console.WriteLine($"🔍 ═══════════════════════════════════════════════\n");
 
                 return new VerificarCertificadoResult
                 {
@@ -148,8 +176,11 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error al verificar certificado: {ex.Message}");
-                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                Console.WriteLine($"\n❌ EXCEPCIÓN AL VERIFICAR CERTIFICADO");
+                Console.WriteLine($"📋 Tipo: {ex.GetType().Name}");
+                Console.WriteLine($"📋 Mensaje: {ex.Message}");
+                Console.WriteLine($"📋 StackTrace: {ex.StackTrace}");
+                
                 return new VerificarCertificadoResult
                 {
                     Success = false,
@@ -160,10 +191,12 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
         }
 
         /// <summary>
-        /// 🆕 NUEVO MÉTODO: Obtiene el certificado en Base64 desde Frappe
-        /// Este es el método que tu controlador necesita
+        /// 🔥 MÉTODO ACTUALIZADO: Obtiene el certificado CON credenciales del emisor
         /// </summary>
-        public async Task<ObtenerCertificadoResult> ObtenerCertificadoAsync(string emisor)
+        public async Task<ObtenerCertificadoResult> ObtenerCertificadoAsync(
+            string emisor,
+            string apiKey = null,
+            string apiSecret = null)
         {
             try
             {
@@ -176,7 +209,9 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     };
                 }
 
-                Console.WriteLine($"🔍 Obteniendo certificado para: {emisor}");
+                Console.WriteLine($"\n📥 ═══════════════════════════════════════════════");
+                Console.WriteLine($"📥 OBTENIENDO CERTIFICADO PARA: {emisor}");
+                Console.WriteLine($"📥 ═══════════════════════════════════════════════");
 
                 var apiUrl = $"{_settings.Url.TrimEnd('/')}/api/method/sri.sri.doctype.certificado_electronico.certificado_electronico.obtener_certificado";
 
@@ -189,27 +224,47 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
 
                 using var req = new HttpRequestMessage(HttpMethod.Post, apiUrl);
                 req.Content = jsonContent;
-                req.Headers.Add("Authorization", $"token {_settings.ApiKey}:{_settings.ApiSecret}");
+                
+                // 🔥 USAR CREDENCIALES ESPECÍFICAS DEL EMISOR
+                if (!string.IsNullOrEmpty(apiKey) && !string.IsNullOrEmpty(apiSecret))
+                {
+                    req.Headers.Add("Authorization", $"token {apiKey}:{apiSecret}");
+                    Console.WriteLine($"🔑 Usando credenciales del emisor");
+                    Console.WriteLine($"   API Key: {apiKey.Substring(0, Math.Min(8, apiKey.Length))}...");
+                }
+                else
+                {
+                    req.Headers.Add("Authorization", $"token {_settings.ApiKey}:{_settings.ApiSecret}");
+                    Console.WriteLine($"🔑 Usando credenciales por defecto");
+                    Console.WriteLine($"   ⚠️ ADVERTENCIA: Puede no tener permisos");
+                }
+
+                Console.WriteLine($"📡 URL: {apiUrl}");
 
                 var res = await _httpClient.SendAsync(req);
+                var responseBody = await res.Content.ReadAsStringAsync();
+
+                Console.WriteLine($"📥 Status Code: {res.StatusCode}");
+
                 if (!res.IsSuccessStatusCode)
                 {
-                    var body = await res.Content.ReadAsStringAsync();
-                    Console.WriteLine($"❌ Error HTTP {res.StatusCode}: {body}");
+                    Console.WriteLine($"❌ Error HTTP {res.StatusCode}");
+                    Console.WriteLine($"📋 Response: {responseBody}");
+                    
                     return new ObtenerCertificadoResult
                     {
                         Success = false,
-                        Error = $"Frappe respondió {res.StatusCode}: {body}"
+                        Error = $"Frappe respondió {res.StatusCode}: {responseBody}"
                     };
                 }
 
-                var json = await res.Content.ReadAsStringAsync();
-                Console.WriteLine($"📥 Respuesta Frappe recibida ({json.Length} caracteres)");
+                Console.WriteLine($"📋 Respuesta recibida ({responseBody.Length} caracteres)");
 
-                using var doc = JsonDocument.Parse(json);
+                using var doc = JsonDocument.Parse(responseBody);
                 
                 if (!doc.RootElement.TryGetProperty("message", out var message))
                 {
+                    Console.WriteLine($"❌ Respuesta inválida: no contiene 'message'");
                     return new ObtenerCertificadoResult
                     {
                         Success = false,
@@ -223,6 +278,9 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     var errorMsg = message.TryGetProperty("error", out var errProp) 
                         ? errProp.GetString() 
                         : "Error desconocido desde Frappe";
+                    
+                    Console.WriteLine($"❌ Frappe retornó success=false: {errorMsg}");
+                    
                     return new ObtenerCertificadoResult
                     {
                         Success = false,
@@ -233,6 +291,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 // Extraer el archivo en base64
                 if (!message.TryGetProperty("archivo", out var archivo))
                 {
+                    Console.WriteLine($"❌ No se encontró 'archivo' en la respuesta");
                     return new ObtenerCertificadoResult
                     {
                         Success = false,
@@ -242,6 +301,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
 
                 if (!archivo.TryGetProperty("contenido_base64", out var base64Prop))
                 {
+                    Console.WriteLine($"❌ No se encontró 'contenido_base64'");
                     return new ObtenerCertificadoResult
                     {
                         Success = false,
@@ -252,6 +312,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 var base64Content = base64Prop.GetString();
                 if (string.IsNullOrEmpty(base64Content))
                 {
+                    Console.WriteLine($"❌ El contenido base64 está vacío");
                     return new ObtenerCertificadoResult
                     {
                         Success = false,
@@ -268,7 +329,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
 
                 if (string.IsNullOrEmpty(password))
                 {
-                    Console.WriteLine("⚠️ ADVERTENCIA: No se recibió contraseña del certificado");
+                    Console.WriteLine($"⚠️ ADVERTENCIA: No se recibió contraseña del certificado");
                 }
                 else
                 {
@@ -282,8 +343,12 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     nombreArchivo = nombreProp.GetString();
                 }
 
-                Console.WriteLine($"✅ Certificado obtenido exitosamente");
-                Console.WriteLine($"📦 Tamaño Base64: {base64Content.Length} caracteres");
+                Console.WriteLine($"\n📊 CERTIFICADO OBTENIDO:");
+                Console.WriteLine($"   ✓ Emisor: {emisor}");
+                Console.WriteLine($"   ✓ Nombre archivo: {nombreArchivo ?? "N/A"}");
+                Console.WriteLine($"   ✓ Tamaño Base64: {base64Content.Length} caracteres");
+                Console.WriteLine($"   ✓ Tiene contraseña: {!string.IsNullOrEmpty(password)}");
+                Console.WriteLine($"📥 ═══════════════════════════════════════════════\n");
 
                 return new ObtenerCertificadoResult
                 {
@@ -296,8 +361,11 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Excepción al obtener certificado: {ex.Message}");
-                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                Console.WriteLine($"\n❌ EXCEPCIÓN AL OBTENER CERTIFICADO");
+                Console.WriteLine($"📋 Tipo: {ex.GetType().Name}");
+                Console.WriteLine($"📋 Mensaje: {ex.Message}");
+                Console.WriteLine($"📋 StackTrace: {ex.StackTrace}");
+                
                 return new ObtenerCertificadoResult
                 {
                     Success = false,
@@ -307,15 +375,17 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
         }
 
         /// <summary>
-        /// Descarga el certificado .p12 desde Frappe y retorna la ruta temporal + contraseña
         /// ⚠️ MÉTODO LEGACY - Usa ObtenerCertificadoAsync en su lugar
         /// </summary>
-        public async Task<DownloadCertificateResult> DownloadCertificateAsync(string emisor)
+        public async Task<DownloadCertificateResult> DownloadCertificateAsync(
+            string emisor,
+            string apiKey = null,
+            string apiSecret = null)
         {
             try
             {
                 // Primero obtener el certificado en Base64
-                var certificado = await ObtenerCertificadoAsync(emisor);
+                var certificado = await ObtenerCertificadoAsync(emisor, apiKey, apiSecret);
                 
                 if (!certificado.Success)
                 {
@@ -390,9 +460,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             }
         }
 
-        /// <summary>
-        /// Limpia archivos de certificados temporales antiguos (más de 1 hora)
-        /// </summary>
         public void CleanupOldCertificates()
         {
             try
@@ -424,9 +491,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             }
         }
 
-        /// <summary>
-        /// Elimina un certificado específico de forma segura
-        /// </summary>
         public void DeleteCertificate(string filePath)
         {
             try

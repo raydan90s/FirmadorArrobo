@@ -59,7 +59,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
             string logoPath = null;
             string rutaPDF = null;
             string rutaXmlLocal = null;
-            
+
             try
             {
                 Console.WriteLine($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
@@ -69,69 +69,163 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 Console.WriteLine($"📅 Fecha: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
                 Console.WriteLine($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
-                // 1️⃣ Verificar certificado en Frappe
-                Console.WriteLine($"\n🔍 PASO 1: Verificando certificado en Frappe...");
-                var verificacion = await _frappeCertService.VerificarCertificadoAsync(request.Emisor.RazonSocial);
+                // 🔥 PASO 0: OBTENER CREDENCIALES DEL EMISOR PRIMERO
+                Console.WriteLine($"\n🔑 PASO 0: Obteniendo credenciales del emisor...");
+                var credenciales = await _frappeCredentialsService.ObtenerCredencialesAsync(request.Emisor.RazonSocial);
 
-                if (!verificacion.Success || !verificacion.Vigente)
+                string apiKey = null;
+                string apiSecret = null;
+                bool usandoCredencialesEmisor = false;
+
+                if (credenciales.Success &&
+                    credenciales.TieneApiKey &&
+                    credenciales.TieneApiSecret &&
+                    !string.IsNullOrEmpty(credenciales.ApiKey) &&
+                    !string.IsNullOrEmpty(credenciales.ApiSecret))
                 {
-                    Console.WriteLine($"❌ ERROR: Certificado no vigente o no encontrado");
+                    apiKey = credenciales.ApiKey;
+                    apiSecret = credenciales.ApiSecret;
+                    usandoCredencialesEmisor = true;
+
+                    Console.WriteLine($"✅ Credenciales del emisor obtenidas correctamente");
+                    Console.WriteLine($"👤 Emisor: {credenciales.Emisor}");
+                    Console.WriteLine($"🔑 API Key: {apiKey?.Substring(0, Math.Min(8, apiKey?.Length ?? 0))}...");
+                }
+                else
+                {
+                    Console.WriteLine($"⚠️ No se obtuvieron credenciales del emisor");
+                    Console.WriteLine($"   Razón: {credenciales.Error}");
+                    Console.WriteLine($"   TieneApiKey: {credenciales.TieneApiKey}");
+                    Console.WriteLine($"   TieneApiSecret: {credenciales.TieneApiSecret}");
+                    Console.WriteLine($"📌 Se intentará con credenciales por defecto (puede fallar)");
+                }
+
+                // 1️⃣ Verificar certificado en Frappe (CON CREDENCIALES CORRECTAS)
+                Console.WriteLine($"\n🔍 PASO 1: Verificando certificado en Frappe...");
+                var verificacion = await _frappeCertService.VerificarCertificadoAsync(
+                    request.Emisor.RazonSocial,
+                    apiKey,
+                    apiSecret
+                );
+
+                if (!verificacion.Success)
+                {
+                    Console.WriteLine($"❌ ERROR: Falló la verificación del certificado");
                     return BadRequest(new
                     {
                         success = false,
-                        error = "Certificado no vigente o no encontrado",
+                        error = "Error al verificar certificado",
+                        detalles = new
+                        {
+                            error_detalle = verificacion.Error,
+                            usandoCredencialesEmisor = usandoCredencialesEmisor
+                        }
+                    });
+                }
+
+                if (!verificacion.Vigente)
+                {
+                    Console.WriteLine($"❌ ERROR: Certificado no vigente");
+                    return BadRequest(new
+                    {
+                        success = false,
+                        error = "Certificado no vigente o incompleto",
                         detalles = new
                         {
                             vigente = verificacion.Vigente,
                             tiene_archivo = verificacion.TieneArchivo,
                             tiene_password = verificacion.TienePassword,
-                            nombre_archivo = verificacion.NombreArchivo
+                            nombre_archivo = verificacion.NombreArchivo,
+                            fecha_vencimiento = verificacion.FechaVencimiento,
+                            usandoCredencialesEmisor = usandoCredencialesEmisor
                         }
                     });
                 }
 
                 Console.WriteLine($"✅ Certificado vigente encontrado");
                 Console.WriteLine($"📄 Archivo: {verificacion.NombreArchivo}");
+                Console.WriteLine($"📅 Vencimiento: {verificacion.FechaVencimiento}");
 
-                // 2️⃣ Descargar certificado desde Frappe
+                // 2️⃣ Descargar certificado desde Frappe (CON CREDENCIALES CORRECTAS)
                 Console.WriteLine($"\n🔐 PASO 2: Descargando certificado digital desde Frappe...");
-                var certificado = await _frappeCertService.ObtenerCertificadoAsync(request.Emisor.RazonSocial);
+                var certificado = await _frappeCertService.ObtenerCertificadoAsync(
+                    request.Emisor.RazonSocial,
+                    apiKey,
+                    apiSecret
+                );
 
                 if (!certificado.Success)
                 {
-                    Console.WriteLine($"❌ ERROR: {certificado.Error}");
+                    Console.WriteLine($"❌ ERROR: No se pudo descargar el certificado");
+                    Console.WriteLine($"   Detalle: {certificado.Error}");
+
                     return BadRequest(new
                     {
                         success = false,
-                        error = $"No se pudo descargar el certificado: {certificado.Error}"
+                        error = $"No se pudo descargar el certificado: {certificado.Error}",
+                        usandoCredencialesEmisor = usandoCredencialesEmisor
                     });
                 }
 
                 Console.WriteLine($"✅ Certificado descargado exitosamente");
                 Console.WriteLine($"📦 Tamaño Base64: {certificado.CertificadoBase64?.Length ?? 0} caracteres");
+                Console.WriteLine($"🔑 Contraseña: {(string.IsNullOrEmpty(certificado.Contrasena) ? "❌ NO RECIBIDA" : "✅ OK")}");
+
+                if (string.IsNullOrEmpty(certificado.Contrasena))
+                {
+                    Console.WriteLine($"❌ ERROR CRÍTICO: No se recibió la contraseña del certificado");
+                    return BadRequest(new
+                    {
+                        success = false,
+                        error = "No se recibió la contraseña del certificado desde Frappe"
+                    });
+                }
 
                 // 3️⃣ Cargar certificado en memoria
                 Console.WriteLine($"\n🔏 PASO 3: Cargando certificado en el servicio de firma...");
-                _certificadoService.CargarDesdeBase64String(
-                    certificado.CertificadoBase64,
-                    certificado.Contrasena
-                );
-                Console.WriteLine($"✅ Certificado cargado correctamente en memoria");
+                try
+                {
+                    _certificadoService.CargarDesdeBase64String(
+                        certificado.CertificadoBase64,
+                        certificado.Contrasena
+                    );
+                    Console.WriteLine($"✅ Certificado cargado correctamente en memoria");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"❌ ERROR al cargar el certificado: {ex.Message}");
+                    return BadRequest(new
+                    {
+                        success = false,
+                        error = $"Error al cargar el certificado: {ex.Message}",
+                        detalle = "Verifique que el certificado y la contraseña sean correctos"
+                    });
+                }
 
                 // 4️⃣ Obtener logo desde Frappe
                 Console.WriteLine($"\n🖼️ PASO 4: Obteniendo logo desde Frappe...");
-                var logoResult = await _frappeLogoService.ObtenerLogoAsync(request.Emisor.RazonSocial);
+                Console.WriteLine("════ CREDENCIALES EN CONTROLLER LOGO ════");
+                Console.WriteLine($"API KEY CONTROLLER: '{apiKey}'");
+                Console.WriteLine($"API SECRET CONTROLLER: '{apiSecret}'");
+                Console.WriteLine("═══════════════════════════════════════");
+
+                var logoResult = await _frappeLogoService.ObtenerLogoAsync(
+                request.Emisor.RazonSocial,
+                apiKey,
+                apiSecret
+                );
+
 
                 if (logoResult.Success && !string.IsNullOrWhiteSpace(logoResult.LogoBase64))
                 {
                     Console.WriteLine($"✅ Logo obtenido: {logoResult.NombreArchivo}");
-                    
+
                     var logoFileName = $"logo_{request.Emisor.RUC}_{DateTime.Now:yyyyMMddHHmmss}.png";
                     logoPath = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", logoFileName);
-                    
+
                     var logoBytes = Convert.FromBase64String(logoResult.LogoBase64);
                     await System.IO.File.WriteAllBytesAsync(logoPath, logoBytes);
-                    
+
                     Console.WriteLine($"💾 Logo guardado temporalmente: {logoFileName}");
                 }
                 else
@@ -256,7 +350,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
 
                     Console.WriteLine($"📋 Estado: {envio.Data?.Estado}");
                     Console.WriteLine($"📋 Error: {envio.Error}");
-                    
+
                     if (mensajesEnvio != null && mensajesEnvio.Any())
                     {
                         Console.WriteLine($"📋 Mensajes:");
@@ -330,47 +424,36 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 _rideService.Factura_1_0_0(factura, rutaPDF);
                 Console.WriteLine($"✅ PDF generado: {nombrePdf}");
 
-                // 🔟 Obtener credenciales del emisor
-                Console.WriteLine($"\n🔑 PASO 10: Obteniendo credenciales del emisor...");
-                var credenciales = await _frappeCredentialsService.ObtenerCredencialesAsync(request.Emisor.RazonSocial);
+                // 🔟 Subir archivos a Frappe
+                Console.WriteLine($"\n☁️ PASO 10: Subiendo archivos a Frappe...");
 
                 FrappeUploadResult respuestaUploadPDF;
                 FrappeUploadResult respuestaUploadXML;
 
-                if (credenciales.Success && 
-                    !string.IsNullOrEmpty(credenciales.ApiKey) && 
-                    !string.IsNullOrEmpty(credenciales.ApiSecret))
+                if (usandoCredencialesEmisor)
                 {
-                    Console.WriteLine($"✅ Credenciales obtenidas para: {credenciales.Emisor}");
-                    Console.WriteLine($"🔑 API Key: {credenciales.ApiKey?.Substring(0, Math.Min(8, credenciales.ApiKey?.Length ?? 0))}...");
+                    Console.WriteLine($"📌 Usando credenciales del emisor para subir archivos");
 
-                    // 1️⃣1️⃣ Subir archivos con credenciales del emisor
-                    Console.WriteLine($"\n☁️ PASO 11: Subiendo archivos a Frappe (credenciales del emisor)...");
-                    
                     respuestaUploadPDF = await _frappeUploader.UploadFileAsync(
                         filePath: rutaPDF,
                         fileName: Path.GetFileName(rutaPDF),
-                        apiKey: credenciales.ApiKey,
-                        apiSecret: credenciales.ApiSecret,
+                        apiKey: apiKey,
+                        apiSecret: apiSecret,
                         folder: "Home/Facturacion/PDF"
                     );
 
                     respuestaUploadXML = await _frappeUploader.UploadFileAsync(
                         filePath: rutaXmlLocal,
                         fileName: nombreArchivoXml,
-                        apiKey: credenciales.ApiKey,
-                        apiSecret: credenciales.ApiSecret,
+                        apiKey: apiKey,
+                        apiSecret: apiSecret,
                         folder: "Home/Facturacion/XML"
                     );
                 }
                 else
                 {
-                    Console.WriteLine($"⚠️ No se pudieron obtener credenciales: {credenciales.Error}");
-                    Console.WriteLine($"📌 Usando credenciales por defecto del appsettings.json");
+                    Console.WriteLine($"📌 Usando credenciales por defecto para subir archivos");
 
-                    // 1️⃣1️⃣ Subir archivos con credenciales por defecto
-                    Console.WriteLine($"\n☁️ PASO 11: Subiendo archivos a Frappe (credenciales por defecto)...");
-                    
                     respuestaUploadPDF = await _frappeUploader.UploadFileAsync(
                         filePath: rutaPDF,
                         fileName: Path.GetFileName(rutaPDF),
@@ -397,8 +480,8 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     Console.WriteLine($"⚠️ Error subiendo XML: {respuestaUploadXML.Error}");
                 }
 
-                // 1️⃣2️⃣ Limpiar archivos temporales
-                Console.WriteLine($"\n🗑️ PASO 12: Limpiando archivos temporales...");
+                // 1️⃣1️⃣ Limpiar archivos temporales
+                Console.WriteLine($"\n🗑️ PASO 11: Limpiando archivos temporales...");
                 await LimpiarArchivosTemporales(rutaPDF, rutaXmlLocal, logoPath);
                 Console.WriteLine($"✅ Archivos temporales eliminados");
 
@@ -415,7 +498,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     fechaAutorizacion = factura.Autorizacion.Fecha.ToString("yyyy-MM-dd HH:mm:ss"),
                     respuestaFrappePDF = respuestaUploadPDF,
                     respuestaFrappeXML = respuestaUploadXML,
-                    credencialesUsadas = credenciales.Success ? "Emisor" : "Por defecto"
+                    credencialesUsadas = usandoCredencialesEmisor ? "Emisor" : "Por defecto"
                 });
             }
             catch (Exception ex)
@@ -444,9 +527,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
             }
         }
 
-        /// <summary>
-        /// Limpia archivos temporales de forma segura
-        /// </summary>
         private async Task LimpiarArchivosTemporales(params string[] rutas)
         {
             foreach (var ruta in rutas)
@@ -465,5 +545,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 }
             }
         }
+
     }
 }

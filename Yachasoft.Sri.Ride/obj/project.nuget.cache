@@ -1,15 +1,15 @@
 {
   "version": 2,
-  "dgSpecHash": "d2/fezzzVKk=",
+  "dgSpecHash": "QpMw03y8KbwtJL7f7FKJQ+IGf29QeXicaI/WG1ozRiwwTg6juKXKPZBtCwhk25dcTGgKKuL69I8jIw1UcWG6CA==",
   "success": true,
-  "projectFilePath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Yachasoft.Sri.Ride\\Yachasoft.Sri.Ride.csproj",
+  "projectFilePath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Ride/Yachasoft.Sri.Ride.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\Sistemas\\.nuget\\packages\\pdfsharpcore\\1.3.18\\pdfsharpcore.1.3.18.nupkg.sha512",
-    "C:\\Users\\Sistemas\\.nuget\\packages\\questpdf\\2025.4.0\\questpdf.2025.4.0.nupkg.sha512",
-    "C:\\Users\\Sistemas\\.nuget\\packages\\sixlabors.fonts\\1.0.0-beta0013\\sixlabors.fonts.1.0.0-beta0013.nupkg.sha512",
-    "C:\\Users\\Sistemas\\.nuget\\packages\\sixlabors.imagesharp\\1.0.4\\sixlabors.imagesharp.1.0.4.nupkg.sha512",
-    "C:\\Users\\Sistemas\\.nuget\\packages\\system.numerics.vectors\\4.5.0\\system.numerics.vectors.4.5.0.nupkg.sha512",
-    "C:\\Users\\Sistemas\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\4.7.0\\system.runtime.compilerservices.unsafe.4.7.0.nupkg.sha512"
+    "/home/bitnami/.nuget/packages/pdfsharpcore/1.3.18/pdfsharpcore.1.3.18.nupkg.sha512",
+    "/home/bitnami/.nuget/packages/questpdf/2025.4.0/questpdf.2025.4.0.nupkg.sha512",
+    "/home/bitnami/.nuget/packages/sixlabors.fonts/1.0.0-beta0013/sixlabors.fonts.1.0.0-beta0013.nupkg.sha512",
+    "/home/bitnami/.nuget/packages/sixlabors.imagesharp/1.0.4/sixlabors.imagesharp.1.0.4.nupkg.sha512",
+    "/home/bitnami/.nuget/packages/system.numerics.vectors/4.5.0/system.numerics.vectors.4.5.0.nupkg.sha512",
+    "/home/bitnami/.nuget/packages/system.runtime.compilerservices.unsafe/4.7.0/system.runtime.compilerservices.unsafe.4.7.0.nupkg.sha512"
   ],
   "logs": []
 }

@@ -1,20 +1,20 @@
 {
   "version": 2,
-  "dgSpecHash": "PCpkyMX2xFw=",
+  "dgSpecHash": "VDSg4F0+eo4Vb3gI2jG2xcVH63K/ePJX3A7UdPPdUwW373wW1o4chIHMD4cH3Ixvp/R7aNHQ0JFIvyZAjoLlzw==",
   "success": true,
-  "projectFilePath": "C:\\Users\\Sistemas\\Documents\\GeneradorPDF\\Microsoft.Xades\\Microsoft.Xades.csproj",
+  "projectFilePath": "/home/bitnami/GeneradorPDF/Microsoft.Xades/Microsoft.Xades.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\Sistemas\\.nuget\\packages\\microsoft.netcore.platforms\\5.0.0-rc.2.20475.5\\microsoft.netcore.platforms.5.0.0-rc.2.20475.5.nupkg.sha512",
-    "C:\\Users\\Sistemas\\.nuget\\packages\\microsoft.win32.systemevents\\5.0.0-rc.2.20475.5\\microsoft.win32.systemevents.5.0.0-rc.2.20475.5.nupkg.sha512",
-    "C:\\Users\\Sistemas\\.nuget\\packages\\system.drawing.common\\5.0.0-rc.2.20475.5\\system.drawing.common.5.0.0-rc.2.20475.5.nupkg.sha512",
-    "C:\\Users\\Sistemas\\.nuget\\packages\\system.formats.asn1\\5.0.0-rc.2.20475.5\\system.formats.asn1.5.0.0-rc.2.20475.5.nupkg.sha512",
-    "C:\\Users\\Sistemas\\.nuget\\packages\\system.security.accesscontrol\\5.0.0-rc.2.20475.5\\system.security.accesscontrol.5.0.0-rc.2.20475.5.nupkg.sha512",
-    "C:\\Users\\Sistemas\\.nuget\\packages\\system.security.cryptography.cng\\5.0.0-rc.2.20475.5\\system.security.cryptography.cng.5.0.0-rc.2.20475.5.nupkg.sha512",
-    "C:\\Users\\Sistemas\\.nuget\\packages\\system.security.cryptography.pkcs\\5.0.0-rc.2.20475.5\\system.security.cryptography.pkcs.5.0.0-rc.2.20475.5.nupkg.sha512",
-    "C:\\Users\\Sistemas\\.nuget\\packages\\system.security.cryptography.xml\\5.0.0-rc.2.20475.5\\system.security.cryptography.xml.5.0.0-rc.2.20475.5.nupkg.sha512",
-    "C:\\Users\\Sistemas\\.nuget\\packages\\system.security.permissions\\5.0.0-rc.2.20475.5\\system.security.permissions.5.0.0-rc.2.20475.5.nupkg.sha512",
-    "C:\\Users\\Sistemas\\.nuget\\packages\\system.security.principal.windows\\5.0.0-rc.2.20475.5\\system.security.principal.windows.5.0.0-rc.2.20475.5.nupkg.sha512",
-    "C:\\Users\\Sistemas\\.nuget\\packages\\system.windows.extensions\\5.0.0-rc.2.20475.5\\system.windows.extensions.5.0.0-rc.2.20475.5.nupkg.sha512"
+    "/home/bitnami/.nuget/packages/microsoft.netcore.platforms/5.0.0-rc.2.20475.5/microsoft.netcore.platforms.5.0.0-rc.2.20475.5.nupkg.sha512",
+    "/home/bitnami/.nuget/packages/microsoft.win32.systemevents/5.0.0-rc.2.20475.5/microsoft.win32.systemevents.5.0.0-rc.2.20475.5.nupkg.sha512",
+    "/home/bitnami/.nuget/packages/system.drawing.common/5.0.0-rc.2.20475.5/system.drawing.common.5.0.0-rc.2.20475.5.nupkg.sha512",
+    "/home/bitnami/.nuget/packages/system.formats.asn1/5.0.0-rc.2.20475.5/system.formats.asn1.5.0.0-rc.2.20475.5.nupkg.sha512",
+    "/home/bitnami/.nuget/packages/system.security.accesscontrol/5.0.0-rc.2.20475.5/system.security.accesscontrol.5.0.0-rc.2.20475.5.nupkg.sha512",
+    "/home/bitnami/.nuget/packages/system.security.cryptography.cng/5.0.0-rc.2.20475.5/system.security.cryptography.cng.5.0.0-rc.2.20475.5.nupkg.sha512",
+    "/home/bitnami/.nuget/packages/system.security.cryptography.pkcs/5.0.0-rc.2.20475.5/system.security.cryptography.pkcs.5.0.0-rc.2.20475.5.nupkg.sha512",
+    "/home/bitnami/.nuget/packages/system.security.cryptography.xml/5.0.0-rc.2.20475.5/system.security.cryptography.xml.5.0.0-rc.2.20475.5.nupkg.sha512",
+    "/home/bitnami/.nuget/packages/system.security.permissions/5.0.0-rc.2.20475.5/system.security.permissions.5.0.0-rc.2.20475.5.nupkg.sha512",
+    "/home/bitnami/.nuget/packages/system.security.principal.windows/5.0.0-rc.2.20475.5/system.security.principal.windows.5.0.0-rc.2.20475.5.nupkg.sha512",
+    "/home/bitnami/.nuget/packages/system.windows.extensions/5.0.0-rc.2.20475.5/system.windows.extensions.5.0.0-rc.2.20475.5.nupkg.sha512"
   ],
   "logs": []
 }

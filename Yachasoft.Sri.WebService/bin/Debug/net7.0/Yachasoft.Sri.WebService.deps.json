@@ -16,10 +16,7 @@
       },
       "Yachasoft.Core/1.0.0": {
         "runtime": {
-          "Yachasoft.Core.dll": {
-            "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.0.0.0"
-          }
+          "Yachasoft.Core.dll": {}
         }
       },
       "Yachasoft.Sri.Core/1.0.0": {
@@ -27,10 +24,7 @@
           "Yachasoft.Core": "1.0.0"
         },
         "runtime": {
-          "Yachasoft.Sri.Core.dll": {
-            "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.0.0.0"
-          }
+          "Yachasoft.Sri.Core.dll": {}
         }
       }
     }
