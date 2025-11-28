@@ -31,15 +31,13 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
         private readonly FrappeLogoService _frappeLogoService;
         private readonly IFrappeCredentialsService _frappeCredentialsService;
 
-        // 🔥 CONFIGURACIÓN GLOBAL DE SSL/TLS EN EL CONSTRUCTOR
+        // Configuración global de SSL/TLS
         static NotaDebitoController()
         {
-            // Esta configuración se ejecuta UNA SOLA VEZ cuando se carga la clase
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
             ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
             ServicePointManager.DefaultConnectionLimit = 100;
             ServicePointManager.Expect100Continue = false;
-            Console.WriteLine("🔐 Configuración SSL/TLS aplicada globalmente para NotaDebitoController");
         }
 
         public NotaDebitoController(
@@ -66,59 +64,9 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
             return Ok(new { mensaje = "NotaDebito Controller funcionando correctamente", timestamp = DateTime.Now });
         }
 
-        [HttpGet("TestSRI")]
-        public async Task<IActionResult> TestSRI()
-        {
-            try
-            {
-                Console.WriteLine("🧪 Probando conectividad al SRI...");
-                
-                // Verificar configuración SSL
-                Console.WriteLine($"🔐 SecurityProtocol actual: {ServicePointManager.SecurityProtocol}");
-                
-                // Intentar conectar al SRI
-                var request = (HttpWebRequest)WebRequest.Create("https://celcer.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline?wsdl");
-                request.Method = "GET";
-                request.Timeout = 30000;
-                
-                using (var response = await request.GetResponseAsync())
-                using (var stream = response.GetResponseStream())
-                using (var reader = new StreamReader(stream))
-                {
-                    var content = await reader.ReadToEndAsync();
-                    Console.WriteLine("✅ Conexión exitosa al SRI");
-                    return Ok(new { 
-                        success = true, 
-                        mensaje = "Conexión exitosa al SRI",
-                        contentLength = content.Length,
-                        securityProtocol = ServicePointManager.SecurityProtocol.ToString()
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ Error al conectar con el SRI: {ex.Message}");
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine($"🔥 InnerException: {ex.InnerException.Message}");
-                }
-                
-                return BadRequest(new
-                {
-                    success = false,
-                    error = ex.Message,
-                    innerError = ex.InnerException?.Message,
-                    securityProtocol = ServicePointManager.SecurityProtocol.ToString()
-                });
-            }
-        }
-
         [HttpPost("GenerarNotaDebito")]
         public async Task<IActionResult> GenerarNotaDebito([FromBody] NotaDebitoRequest request)
         {
-            Console.WriteLine("🚀 Iniciando generación de Nota de Débito");
-            
-            // Asegurar configuración SSL/TLS antes de CUALQUIER operación
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
             ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
 
@@ -256,7 +204,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     RegimenMicroEmpresas = request.Emisor.RegimenMicroEmpresas,
                     RUC = request.Emisor.RUC,
                     ContribuyenteEspecial = request.Emisor.ContribuyenteEspecial,
-                    AgenteRetencion = request.Emisor.AgenteRetencion,
+                    AgenteRetencion = request.Emisor.AgenteRetencion
                 };
 
                 var establecimiento = new Establecimiento
@@ -271,11 +219,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     Codigo = request.CodigoPuntoEmision,
                     Establecimiento = establecimiento
                 };
-
-                string direccionCliente = request.InfoAdicional?
-                    .FirstOrDefault(ca => ca.Nombre.Equals("Direccion", StringComparison.OrdinalIgnoreCase) ||
-                                         ca.Nombre.Equals("Dirección", StringComparison.OrdinalIgnoreCase))
-                    ?.Valor;
 
                 var motivos = request.Motivos.Select(m => new Motivo
                 {
@@ -328,8 +271,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     notaDebito.InfoTributaria.EnumTipoEmision
                 );
 
-                Console.WriteLine($"🔑 Clave de acceso: {notaDebito.InfoTributaria.ClaveAcceso}");
-
                 // PASO 6: GENERAR Y FIRMAR XML
                 var xmlObj = NotaDebito_1_0_0Mapper.Map(notaDebito);
 
@@ -349,19 +290,11 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 rutaXmlLocal = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", nombreArchivoXml);
                 xmlFirmado.Save(rutaXmlLocal);
 
-                Console.WriteLine($"💾 XML guardado: {nombreArchivoXml}");
-
                 // PASO 7: ENVIAR AL SRI
-                Console.WriteLine("📤 Enviando al SRI...");
-                Console.WriteLine($"🔐 SecurityProtocol actual: {ServicePointManager.SecurityProtocol}");
-                
                 var envio = await _webService.ValidarComprobanteAsync(xmlFirmado);
-                
-                Console.WriteLine($"📋 Respuesta SRI - Ok: {envio.Ok}, Error: {envio.Error}");
 
                 if (!envio.Ok)
                 {
-                    Console.WriteLine("❌ Error en el envío al SRI");
                     var primerComprobante = envio.Data?.Comprobantes?.Comprobante?.FirstOrDefault();
                     var mensajesEnvio = primerComprobante?.Mensajes?.Mensaje
                         ?.Select(m => new { m.Identificador, m.Mensaje_, m.Tipo, m.InformacionAdicional })
@@ -372,29 +305,18 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                         success = false,
                         estado = envio.Data?.Estado,
                         error = envio.Error,
-                        mensajes = mensajesEnvio,
-                        diagnostico = new
-                        {
-                            claveAcceso = notaDebito.InfoTributaria.ClaveAcceso,
-                            archivoXML = nombreArchivoXml,
-                            securityProtocol = ServicePointManager.SecurityProtocol.ToString()
-                        }
+                        mensajes = mensajesEnvio
                     });
                 }
 
-                Console.WriteLine("✅ Comprobante recibido por el SRI");
-
                 // PASO 8: ESPERAR Y OBTENER AUTORIZACIÓN
-                Console.WriteLine("⏳ Esperando autorización (3 segundos)...");
                 await Task.Delay(3000);
 
-                Console.WriteLine("🔍 Consultando autorización...");
                 var auto = await _webService.AutorizacionComprobanteAsync(notaDebito.InfoTributaria.ClaveAcceso);
                 var autorizacionData = auto.Data?.Autorizaciones?.Autorizacion?.FirstOrDefault();
 
                 if (!auto.Ok)
                 {
-                    Console.WriteLine("❌ Error en la autorización");
                     var mensajesAutorizacion = autorizacionData?.Mensajes?.Mensaje
                         ?.Select(m => new { m.Identificador, m.Mensaje_, m.Tipo, m.InformacionAdicional })
                         .ToList();
@@ -406,8 +328,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                         mensajes = mensajesAutorizacion
                     });
                 }
-
-                Console.WriteLine("✅ NOTA DE DÉBITO AUTORIZADA");
 
                 // PASO 9: ACTUALIZAR DATOS DE AUTORIZACIÓN
                 if (autorizacionData != null)
@@ -424,15 +344,11 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 }
 
                 // PASO 10: GENERAR PDF
-                Console.WriteLine("📄 Generando PDF...");
                 var nombrePdf = $"NOTADEBITO_{notaDebito.InfoTributaria.ClaveAcceso}.pdf";
                 rutaPDF = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", nombrePdf);
                 _rideService.NotaDebito_1_0_0(notaDebito, rutaPDF);
 
-                Console.WriteLine($"✅ PDF generado: {nombrePdf}");
-
                 // PASO 11: SUBIR ARCHIVOS A FRAPPE
-                Console.WriteLine("📤 Subiendo archivos a Frappe...");
                 FrappeUploadResult respuestaUploadPDF;
                 FrappeUploadResult respuestaUploadXML;
 
@@ -469,13 +385,10 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     );
                 }
 
-                Console.WriteLine("✅ Archivos subidos a Frappe");
-
                 // PASO 12: LIMPIAR ARCHIVOS TEMPORALES
                 await LimpiarArchivosTemporales(rutaPDF, rutaXmlLocal, logoPath);
 
                 // PASO 13: RETORNAR RESPUESTA EXITOSA
-                Console.WriteLine("✅ Proceso completado con éxito");
                 return Ok(new
                 {
                     success = true,
@@ -490,12 +403,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ ERROR: {ex.Message}");
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine($"🔥 InnerException: {ex.InnerException.Message}");
-                }
-
                 return BadRequest(new
                 {
                     success = false,
@@ -523,7 +430,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"⚠️ No se pudo eliminar {Path.GetFileName(ruta)}: {ex.Message}");
+                        Console.WriteLine($"No se pudo eliminar {Path.GetFileName(ruta)}: {ex.Message}");
                     }
                 }
             }
