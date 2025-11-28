@@ -49,6 +49,11 @@ namespace Yachasoft.Sri.FacturacionElectronica
             services.AddHttpClient<IFrappeCredentialsService, FrappeCredentialsService>();
             services.AddHttpClient<IFrappeFileUploader, FrappeFileUploader>();
 
+              services.AddSRIDocumentosElectronicos(options =>
+            {
+                options.WebService.TipoAmbiente = Core.Enumerados.EnumTipoAmbiente.Prueba;
+                options.WebService.TipoEsquema = Core.Enumerados.EnumTipoEsquema.Offline;
+            });
             
         }
 
