@@ -8,12 +8,23 @@ using Newtonsoft.Json.Linq;
 
 namespace Yachasoft.Sri.FacturacionElectronica.Services
 {
+    // ✅ INTERFAZ CON AMBAS VERSIONES
     public interface IFrappeFileUploader
     {
-        Task<FrappeUploadResult> UploadFileAsync(string filePath, string fileName, 
+        // Métodos originales (usan credenciales del config) - Para compatibilidad
+        Task<FrappeUploadResult> UploadFileAsync(string filePath, string fileName,
             string folder = "Home/Attachments", string doctype = null, string docname = null);
-        
+
         Task<FrappeUploadResult> UploadFileStreamAsync(Stream fileStream, string fileName,
+            string folder = "Home/Attachments", string doctype = null, string docname = null);
+
+        // Métodos con credenciales dinámicas - Para tu controlador específico
+        Task<FrappeUploadResult> UploadFileAsync(string filePath, string fileName,
+            string apiKey, string apiSecret,
+            string folder = "Home/Attachments", string doctype = null, string docname = null);
+
+        Task<FrappeUploadResult> UploadFileStreamAsync(Stream fileStream, string fileName,
+            string apiKey, string apiSecret,
             string folder = "Home/Attachments", string doctype = null, string docname = null);
     }
 
@@ -28,40 +39,99 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
 
     public class FrappeFileUploader : IFrappeFileUploader
     {
-        private readonly string _frappeUrl;
-        private readonly string _apiKey;
-        private readonly string _apiSecret;
-        private readonly string _defaultFolder;
         private readonly HttpClient _httpClient;
-    public FrappeFileUploader(IConfiguration configuration)
-    {
-        _frappeUrl = configuration["Frappe:Url"] ?? throw new ArgumentNullException("Frappe:Url no configurado");
-        _apiKey = configuration["Frappe:ApiKey"] ?? throw new ArgumentNullException("Frappe:ApiKey no configurado");
-        _apiSecret = configuration["Frappe:ApiSecret"] ?? throw new ArgumentNullException("Frappe:ApiSecret no configurado");
-        _defaultFolder = configuration["Frappe:FolderRetencion"] ?? "Home/Attachments";
+        private readonly string _defaultApiKey;
+        private readonly string _defaultApiSecret;
+        private readonly string _defaultFolder;
 
-        _httpClient = new HttpClient
+        // ✅ CONSTRUCTOR: Lee credenciales por defecto pero permite que sean opcionales
+        public FrappeFileUploader(HttpClient httpClient, IConfiguration configuration)
         {
-            BaseAddress = new Uri(_frappeUrl),
-            Timeout = TimeSpan.FromMinutes(5)
-        };
+            var frappeUrl = configuration["Frappe:Url"] 
+                ?? throw new ArgumentNullException("Frappe:Url", "Frappe:Url no configurado");
 
-        _httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("token", $"{_apiKey}:{_apiSecret}");
-    }
+            // ✅ Lee credenciales por defecto (si existen)
+            _defaultApiKey = configuration["Frappe:ApiKey"] ?? string.Empty;
+            _defaultApiSecret = configuration["Frappe:ApiSecret"] ?? string.Empty;
+            _defaultFolder = configuration["Frappe:FolderRetencion"] ?? "Home/Attachments";
 
+            httpClient.BaseAddress = new Uri(frappeUrl);
+            httpClient.Timeout = TimeSpan.FromMinutes(5);
+            _httpClient = httpClient;
+
+          
+        }
+
+        // ✅ MÉTODO ORIGINAL - Usa credenciales del config (para compatibilidad con código existente)
         public async Task<FrappeUploadResult> UploadFileAsync(
-            string filePath, 
-            string fileName, 
-            string folder = "Home/Attachments", 
-            string doctype = null, 
+            string filePath,
+            string fileName,
+            string folder = "Home/Attachments",
+            string doctype = null,
+            string docname = null)
+        {
+            if (string.IsNullOrEmpty(_defaultApiKey) || string.IsNullOrEmpty(_defaultApiSecret))
+            {
+                
+                return new FrappeUploadResult
+                {
+                    Success = false,
+                    Error = "Credenciales por defecto no configuradas. Use la sobrecarga con apiKey y apiSecret.",
+                    FileName = fileName
+                };
+            }
+
+            return await UploadFileAsync(filePath, fileName, _defaultApiKey, _defaultApiSecret, folder, doctype, docname);
+        }
+
+        // ✅ MÉTODO ORIGINAL - Usa credenciales del config
+        public async Task<FrappeUploadResult> UploadFileStreamAsync(
+            Stream fileStream,
+            string fileName,
+            string folder = "Home/Attachments",
+            string doctype = null,
+            string docname = null)
+        {
+            if (string.IsNullOrEmpty(_defaultApiKey) || string.IsNullOrEmpty(_defaultApiSecret))
+            {
+                
+                return new FrappeUploadResult
+                {
+                    Success = false,
+                    Error = "Credenciales por defecto no configuradas. Use la sobrecarga con apiKey y apiSecret.",
+                    FileName = fileName
+                };
+            }
+
+            return await UploadFileStreamAsync(fileStream, fileName, _defaultApiKey, _defaultApiSecret, folder, doctype, docname);
+        }
+
+        // 🔥 NUEVO MÉTODO - Con credenciales dinámicas (para tu controlador específico)
+        public async Task<FrappeUploadResult> UploadFileAsync(
+            string filePath,
+            string fileName,
+            string apiKey,
+            string apiSecret,
+            string folder = "Home/Attachments",
+            string doctype = null,
             string docname = null)
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(apiSecret))
+                {
+                    
+                    return new FrappeUploadResult
+                    {
+                        Success = false,
+                        Error = "Se requieren credenciales válidas (apiKey y apiSecret)",
+                        FileName = fileName
+                    };
+                }
+
                 if (!File.Exists(filePath))
                 {
-                    Console.WriteLine($"[ERROR] El archivo no existe: {filePath}");
+                    
                     return new FrappeUploadResult
                     {
                         Success = false,
@@ -71,28 +141,45 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 }
 
                 using var fileStream = File.OpenRead(filePath);
-                return await UploadFileStreamAsync(fileStream, fileName, folder, doctype, docname);
+                return await UploadFileStreamAsync(fileStream, fileName, apiKey, apiSecret, folder, doctype, docname);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[ERROR] Exception subiendo archivo a Frappe: {ex.Message}");
+                
                 return new FrappeUploadResult
                 {
                     Success = false,
-                    Error = ex.Message
+                    Error = ex.Message,
+                    FileName = fileName
                 };
             }
         }
 
+        // 🔥 IMPLEMENTACIÓN REAL - Con credenciales dinámicas
         public async Task<FrappeUploadResult> UploadFileStreamAsync(
             Stream fileStream,
             string fileName,
+            string apiKey,
+            string apiSecret,
             string folder = "Home/Attachments",
             string doctype = null,
             string docname = null)
         {
             try
             {
+              
+
+                if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(apiSecret))
+                {
+                    
+                    return new FrappeUploadResult
+                    {
+                        Success = false,
+                        Error = "Credenciales requeridas",
+                        FileName = fileName
+                    };
+                }
+
                 folder ??= "Home/Attachments";
 
                 using var content = new MultipartFormDataContent();
@@ -108,44 +195,77 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 {
                     content.Add(new StringContent(doctype), "attached_to_doctype");
                     content.Add(new StringContent(docname), "attached_to_name");
+                    
                 }
 
-                var response = await _httpClient.PostAsync("/api/method/upload_file", content);
+                // 🔥 REQUEST CON CREDENCIALES ESPECÍFICAS
+                using var request = new HttpRequestMessage(HttpMethod.Post, "/api/method/upload_file");
+                request.Content = content;
+                request.Headers.Authorization = new AuthenticationHeaderValue("token", $"{apiKey}:{apiSecret}");
 
+               
+
+                var response = await _httpClient.SendAsync(request);
                 var responseBody = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"[ERROR] Frappe respondió con código {response.StatusCode}: {responseBody}");
+                    
+                    
                     return new FrappeUploadResult
                     {
                         Success = false,
-                        Error = "upload_failed",
+                        Error = $"HTTP {response.StatusCode}: {responseBody}",
                         FileName = fileName,
-                        RawResponse = JObject.Parse(responseBody)
+                        RawResponse = TryParseJson(responseBody)
                     };
                 }
 
                 var jsonResponse = JObject.Parse(responseBody);
                 var messageData = jsonResponse["message"];
+                var fileUrl = messageData?["file_url"]?.ToString();
+                
+             
 
                 return new FrappeUploadResult
                 {
                     Success = true,
-                    FileUrl = messageData?["file_url"]?.ToString(),
+                    FileUrl = fileUrl,
                     FileName = messageData?["file_name"]?.ToString() ?? fileName,
                     RawResponse = jsonResponse
                 };
             }
-            catch (Exception ex)
+            catch (HttpRequestException httpEx)
             {
-                Console.WriteLine($"[ERROR] Exception en UploadFileStreamAsync: {ex.Message}");
-                Console.WriteLine($"[TRACE] {ex.StackTrace}");
+            
                 return new FrappeUploadResult
                 {
                     Success = false,
-                    Error = ex.Message
+                    Error = $"Error HTTP: {httpEx.Message}",
+                    FileName = fileName
                 };
+            }
+            catch (Exception ex)
+            {
+              
+                return new FrappeUploadResult
+                {
+                    Success = false,
+                    Error = ex.Message,
+                    FileName = fileName
+                };
+            }
+        }
+
+        private JObject TryParseJson(string json)
+        {
+            try
+            {
+                return JObject.Parse(json);
+            }
+            catch
+            {
+                return new JObject { ["raw"] = json };
             }
         }
     }

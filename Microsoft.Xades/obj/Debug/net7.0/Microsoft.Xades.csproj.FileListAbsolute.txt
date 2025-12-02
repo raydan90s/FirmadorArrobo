@@ -9,3 +9,15 @@
 /home/bitnami/GeneradorPDF/Microsoft.Xades/obj/Debug/net7.0/refint/Microsoft.Xades.dll
 /home/bitnami/GeneradorPDF/Microsoft.Xades/obj/Debug/net7.0/Microsoft.Xades.pdb
 /home/bitnami/GeneradorPDF/Microsoft.Xades/obj/Debug/net7.0/ref/Microsoft.Xades.dll
+C:\Users\Sistemas\Documents\GeneradorPDF\Microsoft.Xades\bin\Debug\net7.0\Microsoft.Xades.deps.json
+C:\Users\Sistemas\Documents\GeneradorPDF\Microsoft.Xades\bin\Debug\net7.0\Microsoft.Xades.dll
+C:\Users\Sistemas\Documents\GeneradorPDF\Microsoft.Xades\bin\Debug\net7.0\Microsoft.Xades.pdb
+C:\Users\Sistemas\Documents\GeneradorPDF\Microsoft.Xades\bin\Debug\net7.0\XAdES.xml
+C:\Users\Sistemas\Documents\GeneradorPDF\Microsoft.Xades\obj\Debug\net7.0\Microsoft.Xades.csproj.AssemblyReference.cache
+C:\Users\Sistemas\Documents\GeneradorPDF\Microsoft.Xades\obj\Debug\net7.0\Microsoft.Xades.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Sistemas\Documents\GeneradorPDF\Microsoft.Xades\obj\Debug\net7.0\Microsoft.Xades.csproj.CoreCompileInputs.cache
+C:\Users\Sistemas\Documents\GeneradorPDF\Microsoft.Xades\obj\Debug\net7.0\Microsoft.Xades.sourcelink.json
+C:\Users\Sistemas\Documents\GeneradorPDF\Microsoft.Xades\obj\Debug\net7.0\Microsoft.Xades.dll
+C:\Users\Sistemas\Documents\GeneradorPDF\Microsoft.Xades\obj\Debug\net7.0\refint\Microsoft.Xades.dll
+C:\Users\Sistemas\Documents\GeneradorPDF\Microsoft.Xades\obj\Debug\net7.0\Microsoft.Xades.pdb
+C:\Users\Sistemas\Documents\GeneradorPDF\Microsoft.Xades\obj\Debug\net7.0\ref\Microsoft.Xades.dll

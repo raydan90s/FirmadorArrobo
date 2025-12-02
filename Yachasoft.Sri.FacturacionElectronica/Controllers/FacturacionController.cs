@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
@@ -22,33 +23,193 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
     [ApiController]
     public class FacturaController : ControllerBase
     {
-        private readonly Signer.ICertificadoService certificadoService;
-        private readonly WebService.ISriWebService webService;
-        private readonly Ride.IRIDEService rIDEService;
-        private readonly FrappeFileUploader _frappeUploader;
+        private readonly Signer.ICertificadoService _certificadoService;
+        private readonly WebService.ISriWebService _webService;
+        private readonly Ride.IRIDEService _rideService;
+        private readonly IFrappeFileUploader _frappeUploader;
+        private readonly FrappeCertificateService _frappeCertService;
+        private readonly FrappeLogoService _frappeLogoService;
+        private readonly IFrappeCredentialsService _frappeCredentialsService;
 
         public FacturaController(
             Signer.ICertificadoService certificadoService,
             WebService.ISriWebService webService,
-            Ride.IRIDEService rIDEService,
-            FrappeFileUploader frappeUploader)
+            Ride.IRIDEService rideService,
+            IFrappeFileUploader frappeUploader,
+            FrappeCertificateService frappeCertService,
+            FrappeLogoService frappeLogoService,
+            IFrappeCredentialsService frappeCredentialsService)
         {
-            this.certificadoService = certificadoService;
-            this.webService = webService;
-            this.rIDEService = rIDEService;
-            this._frappeUploader = frappeUploader;
+            _certificadoService = certificadoService;
+            _webService = webService;
+            _rideService = rideService;
+            _frappeUploader = frappeUploader;
+            _frappeCertService = frappeCertService;
+            _frappeLogoService = frappeLogoService;
+            _frappeCredentialsService = frappeCredentialsService;
         }
 
         [HttpPost("GenerarFactura")]
         public async Task<IActionResult> GenerarFactura([FromBody] FacturaRequest request)
         {
+
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
+            ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+
+            string logoPath = null;
+            string rutaPDF = null;
+            string rutaXmlLocal = null;
+
             try
             {
+
+
+                // 🔥 PASO 0: OBTENER CREDENCIALES DEL EMISOR PRIMERO
+
+                var credenciales = await _frappeCredentialsService.ObtenerCredencialesAsync(request.Emisor.RazonSocial);
+
+                string apiKey = null;
+                string apiSecret = null;
+                bool usandoCredencialesEmisor = false;
+
+                if (credenciales.Success &&
+                    credenciales.TieneApiKey &&
+                    credenciales.TieneApiSecret &&
+                    !string.IsNullOrEmpty(credenciales.ApiKey) &&
+                    !string.IsNullOrEmpty(credenciales.ApiSecret))
+                {
+                    apiKey = credenciales.ApiKey;
+                    apiSecret = credenciales.ApiSecret;
+                    usandoCredencialesEmisor = true;
+
+
+                }
+
+
+
+                var verificacion = await _frappeCertService.VerificarCertificadoAsync(
+                    request.Emisor.RazonSocial,
+                    apiKey,
+                    apiSecret
+                );
+
+                if (!verificacion.Success)
+                {
+
+                    return BadRequest(new
+                    {
+                        success = false,
+                        error = "Error al verificar certificado",
+                        detalles = new
+                        {
+                            error_detalle = verificacion.Error,
+                            usandoCredencialesEmisor = usandoCredencialesEmisor
+                        }
+                    });
+                }
+
+                if (!verificacion.Vigente)
+                {
+
+                    return BadRequest(new
+                    {
+                        success = false,
+                        error = "Certificado no vigente o incompleto",
+                        detalles = new
+                        {
+                            vigente = verificacion.Vigente,
+                            tiene_archivo = verificacion.TieneArchivo,
+                            tiene_password = verificacion.TienePassword,
+                            nombre_archivo = verificacion.NombreArchivo,
+                            fecha_vencimiento = verificacion.FechaVencimiento,
+                            usandoCredencialesEmisor = usandoCredencialesEmisor
+                        }
+                    });
+                }
+
+
+
+
+                var certificado = await _frappeCertService.ObtenerCertificadoAsync(
+                    request.Emisor.RazonSocial,
+                    apiKey,
+                    apiSecret
+                );
+
+                if (!certificado.Success)
+                {
+
+
+                    return BadRequest(new
+                    {
+                        success = false,
+                        error = $"No se pudo descargar el certificado: {certificado.Error}",
+                        usandoCredencialesEmisor = usandoCredencialesEmisor
+                    });
+                }
+
+
+
+                if (string.IsNullOrEmpty(certificado.Contrasena))
+                {
+
+                    return BadRequest(new
+                    {
+                        success = false,
+                        error = "No se recibió la contraseña del certificado desde Frappe"
+                    });
+                }
+
+
+                try
+                {
+                    _certificadoService.CargarDesdeBase64String(
+                        certificado.CertificadoBase64,
+                        certificado.Contrasena
+                    );
+
+                }
+                catch (Exception ex)
+                {
+
+                    return BadRequest(new
+                    {
+                        success = false,
+                        error = $"Error al cargar el certificado: {ex.Message}",
+                        detalle = "Verifique que el certificado y la contraseña sean correctos"
+                    });
+                }
+
+
+
+                var logoResult = await _frappeLogoService.ObtenerLogoAsync(
+                request.Emisor.RazonSocial,
+                apiKey,
+                apiSecret
+                );
+
+
+                if (logoResult.Success && !string.IsNullOrWhiteSpace(logoResult.LogoBase64))
+                {
+
+
+                    var logoFileName = $"logo_{request.Emisor.RUC}_{DateTime.Now:yyyyMMddHHmmss}.png";
+                    logoPath = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", logoFileName);
+
+                    var logoBytes = Convert.FromBase64String(logoResult.LogoBase64);
+                    await System.IO.File.WriteAllBytesAsync(logoPath, logoBytes);
+
+
+                }
+
+
+
+
                 var emisor = new Emisor
                 {
                     DireccionMatriz = request.Emisor.DireccionMatriz,
                     EnumTipoAmbiente = EnumParserHelper.ParseTipoAmbiente(request.Emisor.EnumTipoAmbiente),
-                    Logo = "/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica/Logo_UTPL.png",
+                    Logo = logoPath,
                     NombreComercial = request.Emisor.NombreComercial,
                     ObligadoContabilidad = request.Emisor.ObligadoContabilidad,
                     RazonSocial = request.Emisor.RazonSocial,
@@ -71,14 +232,10 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     Establecimiento = establecimiento
                 };
 
-                string direccionCliente = null;
-                if (request.InfoAdicional != null)
-                {
-                    var direccionAdicional = request.InfoAdicional.FirstOrDefault(ca => 
-                        ca.Nombre.Equals("Direccion", StringComparison.OrdinalIgnoreCase) || 
-                        ca.Nombre.Equals("Dirección", StringComparison.OrdinalIgnoreCase));
-                    direccionCliente = direccionAdicional?.Valor;
-                }
+                string direccionCliente = request.InfoAdicional?
+                    .FirstOrDefault(ca => ca.Nombre.Equals("Direccion", StringComparison.OrdinalIgnoreCase) ||
+                                         ca.Nombre.Equals("Dirección", StringComparison.OrdinalIgnoreCase))
+                    ?.Valor;
 
                 var detallesMapeados = MapperHelper.MapearDetallesConSubsidio(request.Detalles);
 
@@ -86,26 +243,22 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 {
                     PuntoEmision = puntoEmision,
                     FechaEmision = request.FechaEmision,
-                    
                     Sujeto = new Sujeto
                     {
                         Identificacion = request.Cliente.Identificacion,
                         RazonSocial = request.Cliente.RazonSocial,
                         TipoIdentificador = EnumParserHelper.ParseTipoIdentificacion(request.Cliente.TipoIdentificador)
                     },
-                    
                     InfoFactura = new Factura_1_0_0Modelo.InfoFactura
                     {
                         TotalSinImpuestos = request.InfoFactura.TotalSinImpuestos,
                         TotalDescuento = request.InfoFactura.TotalDescuento,
                         ImporteTotal = request.InfoFactura.ImporteTotal,
                         DireccionComprador = direccionCliente,
-                        
                         TotalConImpuestos = MapperHelper.MapearImpuestosVentaDesdeDetallesConSubsidio(detallesMapeados),
                         Pagos = MapperHelper.MapearPagos(request.InfoFactura.Pagos)
                     },
-                    
-                    Detalles = detallesMapeados, 
+                    Detalles = detallesMapeados,
                     InfoAdicional = request.InfoAdicional
                 };
 
@@ -123,167 +276,202 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     factura.InfoTributaria.EnumTipoEmision
                 );
 
+
+
+
                 var xmlObj = Factura_1_0_0Mapper.Map(factura);
 
                 var xmlDoc = new XmlDocument();
                 using (var memoryStream = new MemoryStream())
                 {
-                    var serializer = new XmlSerializer(typeof(factura));
+                    var serializer = new XmlSerializer(xmlObj.GetType());
                     serializer.Serialize(memoryStream, xmlObj);
                     memoryStream.Position = 0;
                     xmlDoc.Load(memoryStream);
                 }
 
                 xmlDoc.DocumentElement.SetAttribute("id", "comprobante");
-
-                certificadoService.CargarDesdeP12(
-                    "/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica/signature.p12",
-                    "Compus1234"
-                );
-                var xmlFirmado = certificadoService.FirmarDocumento(xmlDoc);
+                var xmlFirmado = _certificadoService.FirmarDocumento(xmlDoc);
 
                 var nombreArchivoXml = $"FACTURA_{factura.InfoTributaria.ClaveAcceso}.xml";
-                xmlFirmado.Save(nombreArchivoXml);
+                rutaXmlLocal = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", nombreArchivoXml);
+                xmlFirmado.Save(rutaXmlLocal);
 
-                var envio = await webService.ValidarComprobanteAsync(xmlFirmado);
-                Console.WriteLine($"ESTADO DE COMPROBANTE DE ENVIO: {System.Text.Json.JsonSerializer.Serialize(envio, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })}");
 
-                if (envio.Ok)
+
+                var envio = await _webService.ValidarComprobanteAsync(xmlFirmado);
+
+
+
+                if (!envio.Ok)
                 {
-                    System.Threading.Thread.Sleep(3000);
-                    
-                    var auto = await webService.AutorizacionComprobanteAsync(factura.InfoTributaria.ClaveAcceso);
-                    var autorizacionData = auto.Data?.Autorizaciones?.Autorizacion?.FirstOrDefault();
-                    Console.WriteLine($"ESTADO DE COMPROBANTE DE AUTORIZACION: {System.Text.Json.JsonSerializer.Serialize(auto, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })}");
 
-                    if (auto.Ok)
-                    {
-                        Console.WriteLine("AUTORIZADO");
-
-                        if (autorizacionData != null)
-                        {
-                            factura.Autorizacion.Numero = autorizacionData.NumeroAutorizacion;
-                            if (DateTimeOffset.TryParse(autorizacionData.FechaAutorizacion, out var fechaOffset))
-                            {
-                                factura.Autorizacion.Fecha = fechaOffset.ToOffset(TimeSpan.FromHours(-5)).DateTime;
-                            }
-                            else
-                            {
-                                throw new Exception($"Fecha de autorización inválida: {autorizacionData.FechaAutorizacion}");
-                            }
-                        }
-
-                        var rutaPDF = $"/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica/FACTURA_{factura.InfoTributaria.ClaveAcceso}.pdf";
-                        rIDEService.Factura_1_0_0(factura, rutaPDF);
-
-                        var respuestaUploadPDF = await _frappeUploader.UploadFileAsync(
-                            rutaPDF,
-                            Path.GetFileName(rutaPDF),
-                            folder: "Home/Facturacion/PDF"
-                        );
-                        Console.WriteLine("📤 Archivo PDF subido a Frappe:");
-                        Console.WriteLine(respuestaUploadPDF);
-
-                        var rutaXML = $"/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica/FACTURA_{factura.InfoTributaria.ClaveAcceso}.xml";
-                        var respuestaUploadXML = await _frappeUploader.UploadFileAsync(
-                            rutaXML,
-                            Path.GetFileName(rutaXML),
-                            folder: "Home/Facturacion/XML"
-                        );
-                        Console.WriteLine("📤 Archivo XML subido a Frappe:");
-                        Console.WriteLine(respuestaUploadXML);
-
-                        await FileCleanupHelper.DeleteFileAsync(rutaPDF);
-                        await FileCleanupHelper.DeleteFileAsync(rutaXML);
-
-                        var resultado = new
-                        {
-                            success = true,
-                            claveAcceso = factura.InfoTributaria.ClaveAcceso,
-                            mensaje = "Factura autorizada, PDF generado y archivos subidos a Frappe correctamente",
-                            numeroAutorizacion = factura.Autorizacion.Numero,
-                            fechaAutorizacion = factura.Autorizacion.Fecha.ToString("yyyy-MM-dd HH:mm:ss"),
-                            respuestaFrappePDF = respuestaUploadPDF,
-                            respuestaFrappeXML = respuestaUploadXML
-                        };
-
-                        return Ok(resultado);
-                    }
-                    else
-                    {
-                        var mensajesAutorizacion = autorizacionData?.Mensajes?.Mensaje?
-                            .Select(m => new { m.Identificador, m.Mensaje_, m.Tipo, m.InformacionAdicional })
-                            .ToList();
-
-                        if (mensajesAutorizacion != null && mensajesAutorizacion.Count > 0)
-                        {
-                            Console.WriteLine("MENSAJES DE AUTORIZACIÓN:");
-                            foreach (var msg in mensajesAutorizacion)
-                            {
-                                Console.WriteLine($"- Identificador: {msg.Identificador}");
-                                Console.WriteLine($"  Mensaje: {msg.Mensaje_}");
-                                Console.WriteLine($"  Tipo: {msg.Tipo}");
-                                Console.WriteLine($"  Información Adicional: {msg.InformacionAdicional}");
-                                Console.WriteLine("-------------------------------");
-                            }
-                        }
-                        else
-                        {
-                            Console.WriteLine("No hay mensajes de autorización disponibles.");
-                        }
-
-                        return Ok(new
-                        {
-                            success = false,
-                            estado = autorizacionData?.Estado,
-                            mensajes = mensajesAutorizacion
-                        });
-                    }
-                }
-                else
-                {
                     var primerComprobante = envio.Data?.Comprobantes?.Comprobante?.FirstOrDefault();
                     var mensajesEnvio = primerComprobante?.Mensajes?.Mensaje
                         ?.Select(m => new { m.Identificador, m.Mensaje_, m.Tipo, m.InformacionAdicional })
                         .ToList();
 
-                    if (mensajesEnvio != null && mensajesEnvio.Count > 0)
-                    {
-                        Console.WriteLine("MENSAJES DE ENVÍO:");
-                        foreach (var msg in mensajesEnvio)
-                        {
-                            Console.WriteLine($"- Identificador: {msg.Identificador}");
-                            Console.WriteLine($"  Mensaje: {msg.Mensaje_}");
-                            Console.WriteLine($"  Tipo: {msg.Tipo}");
-                            Console.WriteLine($"  Información Adicional: {msg.InformacionAdicional}");
-                            Console.WriteLine("-------------------------------");
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("No hay mensajes de envío disponibles.");
-                    }
+
+
+                 
 
                     return Ok(new
                     {
                         success = false,
                         estado = envio.Data?.Estado,
+                        error = envio.Error,
                         mensajes = mensajesEnvio
                     });
                 }
+
+
+                await Task.Delay(3000);
+
+
+                var auto = await _webService.AutorizacionComprobanteAsync(factura.InfoTributaria.ClaveAcceso);
+                var autorizacionData = auto.Data?.Autorizaciones?.Autorizacion?.FirstOrDefault();
+
+
+                if (!auto.Ok)
+                {
+
+
+                    var mensajesAutorizacion = autorizacionData?.Mensajes?.Mensaje
+                        ?.Select(m => new { m.Identificador, m.Mensaje_, m.Tipo, m.InformacionAdicional })
+                        .ToList();
+
+                    return Ok(new
+                    {
+                        success = false,
+                        estado = autorizacionData?.Estado,
+                        mensajes = mensajesAutorizacion
+                    });
+                }
+
+
+
+                // Actualizar datos de autorización
+                if (autorizacionData != null)
+                {
+                    factura.Autorizacion.Numero = autorizacionData.NumeroAutorizacion;
+                    if (DateTimeOffset.TryParse(autorizacionData.FechaAutorizacion, out var fechaOffset))
+                    {
+                        factura.Autorizacion.Fecha = fechaOffset.ToOffset(TimeSpan.FromHours(-5)).DateTime;
+                    }
+                    else
+                    {
+                        throw new Exception($"Fecha de autorización inválida: {autorizacionData.FechaAutorizacion}");
+                    }
+
+
+                }
+
+
+                var nombrePdf = $"FACTURA_{factura.InfoTributaria.ClaveAcceso}.pdf";
+                rutaPDF = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", nombrePdf);
+                _rideService.Factura_1_0_0(factura, rutaPDF);
+
+
+
+
+                FrappeUploadResult respuestaUploadPDF;
+                FrappeUploadResult respuestaUploadXML;
+
+                if (usandoCredencialesEmisor)
+                {
+
+
+                    respuestaUploadPDF = await _frappeUploader.UploadFileAsync(
+                        filePath: rutaPDF,
+                        fileName: Path.GetFileName(rutaPDF),
+                        apiKey: apiKey,
+                        apiSecret: apiSecret,
+                        folder: "Home/Facturacion/PDF"
+                    );
+
+                    respuestaUploadXML = await _frappeUploader.UploadFileAsync(
+                        filePath: rutaXmlLocal,
+                        fileName: nombreArchivoXml,
+                        apiKey: apiKey,
+                        apiSecret: apiSecret,
+                        folder: "Home/Facturacion/XML"
+                    );
+                }
+                else
+                {
+
+
+                    respuestaUploadPDF = await _frappeUploader.UploadFileAsync(
+                        filePath: rutaPDF,
+                        fileName: Path.GetFileName(rutaPDF),
+                        folder: "Home/Facturacion/PDF"
+                    );
+
+                    respuestaUploadXML = await _frappeUploader.UploadFileAsync(
+                        filePath: rutaXmlLocal,
+                        fileName: nombreArchivoXml,
+                        folder: "Home/Facturacion/XML"
+                    );
+                }
+
+
+
+               
+
+                await LimpiarArchivosTemporales(rutaPDF, rutaXmlLocal, logoPath);
+
+
+                return Ok(new
+                {
+                    success = true,
+                    claveAcceso = factura.InfoTributaria.ClaveAcceso,
+                    mensaje = "Factura autorizada, PDF generado y archivos subidos a Frappe correctamente",
+                    numeroAutorizacion = factura.Autorizacion.Numero,
+                    fechaAutorizacion = factura.Autorizacion.Fecha.ToString("yyyy-MM-dd HH:mm:ss"),
+                    respuestaFrappePDF = respuestaUploadPDF,
+                    respuestaFrappeXML = respuestaUploadXML,
+                    credencialesUsadas = usandoCredencialesEmisor ? "Emisor" : "Por defecto"
+                });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ ERROR: {ex.Message}");
-                Console.WriteLine(ex.StackTrace);
+
+
+                
 
                 return BadRequest(new
                 {
                     success = false,
                     error = ex.Message,
-                    stackTrace = ex.StackTrace
+                    stackTrace = ex.StackTrace,
+                    innerError = ex.InnerException?.Message
                 });
             }
+            finally
+            {
+                // Limpieza de seguridad en el bloque finally
+                await LimpiarArchivosTemporales(rutaPDF, rutaXmlLocal, logoPath);
+            }
         }
+
+        private async Task LimpiarArchivosTemporales(params string[] rutas)
+        {
+            foreach (var ruta in rutas)
+            {
+                if (!string.IsNullOrWhiteSpace(ruta) && System.IO.File.Exists(ruta))
+                {
+                    try
+                    {
+                        await FileCleanupHelper.DeleteFileAsync(ruta);
+                        Console.WriteLine($"Archivo eliminado: {Path.GetFileName(ruta)}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"No se pudo eliminar {Path.GetFileName(ruta)}: {ex.Message}");
+                    }
+                }
+            }
+        }
+
     }
 }

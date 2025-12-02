@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Yachasoft.Sri.FacturacionElectronica.Services;
+using System.Net;
 
 namespace Yachasoft.Sri.FacturacionElectronica
 {
@@ -14,38 +14,49 @@ namespace Yachasoft.Sri.FacturacionElectronica
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            
+            // 🔥 CONFIGURACIÓN TLS GLOBAL - Se ejecuta al iniciar la aplicación
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
+            ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+            
+ 
         }
 
         public IConfiguration Configuration { get; }
 
-        // Se ejecuta al iniciar la app
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
 
-            services.AddHttpClient();
-
-            // Swagger
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Yachasoft.Sri.FacturacionElectronica", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "Yachasoft.Sri.FacturacionElectronica",
+                    Version = "v1"
+                });
             });
 
-            // Registro de servicios SRI
-            services.AddSRIDocumentosElectronicos(options =>
+            // Registro del cliente HTTP
+            services.AddHttpClient();
+
+            // Configuración Frappe
+            services.Configure<FrappeSettings>(Configuration.GetSection("Frappe"));
+
+            // ✅ Servicios Frappe con HttpClient
+            services.AddHttpClient<FrappeLogoService>();
+            services.AddHttpClient<FrappeCertificateService>();
+            services.AddHttpClient<IFrappeCredentialsService, FrappeCredentialsService>();
+            services.AddHttpClient<IFrappeFileUploader, FrappeFileUploader>();
+
+              services.AddSRIDocumentosElectronicos(options =>
             {
                 options.WebService.TipoAmbiente = Core.Enumerados.EnumTipoAmbiente.Prueba;
                 options.WebService.TipoEsquema = Core.Enumerados.EnumTipoEsquema.Offline;
             });
-
-            // 👇 Aquí registras tu FrappeFileUploader
-            services.AddSingleton<FrappeFileUploader>();
-
-            // Si prefieres que se cree uno nuevo por request:
-            // services.AddScoped<FrappeFileUploader>();
+            
         }
 
-        // Configuración del pipeline HTTP
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())

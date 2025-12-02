@@ -11,3 +11,17 @@
 /home/bitnami/GeneradorPDF/FirmaXadesNet/obj/Debug/net7.0/refint/FirmaXadesNet.dll
 /home/bitnami/GeneradorPDF/FirmaXadesNet/obj/Debug/net7.0/FirmaXadesNet.pdb
 /home/bitnami/GeneradorPDF/FirmaXadesNet/obj/Debug/net7.0/ref/FirmaXadesNet.dll
+C:\Users\Sistemas\Documents\GeneradorPDF\FirmaXadesNet\bin\Debug\net7.0\FirmaXadesNet.deps.json
+C:\Users\Sistemas\Documents\GeneradorPDF\FirmaXadesNet\bin\Debug\net7.0\FirmaXadesNet.dll
+C:\Users\Sistemas\Documents\GeneradorPDF\FirmaXadesNet\bin\Debug\net7.0\FirmaXadesNet.pdb
+C:\Users\Sistemas\Documents\GeneradorPDF\FirmaXadesNet\bin\Debug\net7.0\Microsoft.Xades.dll
+C:\Users\Sistemas\Documents\GeneradorPDF\FirmaXadesNet\bin\Debug\net7.0\Microsoft.Xades.pdb
+C:\Users\Sistemas\Documents\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\FirmaXadesNet.csproj.AssemblyReference.cache
+C:\Users\Sistemas\Documents\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\FirmaXadesNet.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Sistemas\Documents\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\FirmaXadesNet.csproj.CoreCompileInputs.cache
+C:\Users\Sistemas\Documents\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\FirmaXadesNet.sourcelink.json
+C:\Users\Sistemas\Documents\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\FirmaXad.7D7D4F82.Up2Date
+C:\Users\Sistemas\Documents\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\FirmaXadesNet.dll
+C:\Users\Sistemas\Documents\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\refint\FirmaXadesNet.dll
+C:\Users\Sistemas\Documents\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\FirmaXadesNet.pdb
+C:\Users\Sistemas\Documents\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\ref\FirmaXadesNet.dll

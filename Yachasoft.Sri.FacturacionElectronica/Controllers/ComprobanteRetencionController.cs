@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Xml;
 using System.Threading.Tasks;
+using System.Net;
 using Yachasoft.Sri.Core.Enumerados;
 using Yachasoft.Sri.Core.Atributos;
 using Yachasoft.Sri.Modelos;
@@ -23,34 +24,181 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
     [ApiController]
     public class RetencionController : ControllerBase
     {
-        private readonly Signer.ICertificadoService certificadoService;
-        private readonly WebService.ISriWebService webService;
-        private readonly Ride.IRIDEService rIDEService;
-        private readonly FrappeFileUploader _frappeUploader;
+        private readonly Signer.ICertificadoService _certificadoService;
+        private readonly WebService.ISriWebService _webService;
+        private readonly Ride.IRIDEService _rideService;
+        private readonly IFrappeFileUploader _frappeUploader;
+        private readonly FrappeCertificateService _frappeCertService;
+        private readonly FrappeLogoService _frappeLogoService;
+        private readonly IFrappeCredentialsService _frappeCredentialsService;
+
+        // Configuración global de SSL/TLS
+        static RetencionController()
+        {
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
+            ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+            ServicePointManager.DefaultConnectionLimit = 100;
+            ServicePointManager.Expect100Continue = false;
+        }
 
         public RetencionController(
             Signer.ICertificadoService certificadoService,
             WebService.ISriWebService webService,
-            Ride.IRIDEService rIDEService,
-            FrappeFileUploader frappeUploader
-            )
+            Ride.IRIDEService rideService,
+            IFrappeFileUploader frappeUploader,
+            FrappeCertificateService frappeCertService,
+            FrappeLogoService frappeLogoService,
+            IFrappeCredentialsService frappeCredentialsService)
         {
-            this.certificadoService = certificadoService;
-            this.webService = webService;
-            this.rIDEService = rIDEService;
-            this._frappeUploader = frappeUploader;
+            _certificadoService = certificadoService;
+            _webService = webService;
+            _rideService = rideService;
+            _frappeUploader = frappeUploader;
+            _frappeCertService = frappeCertService;
+            _frappeLogoService = frappeLogoService;
+            _frappeCredentialsService = frappeCredentialsService;
+        }
+
+        [HttpGet("Test")]
+        public IActionResult Test()
+        {
+            return Ok(new { mensaje = "Retencion Controller funcionando correctamente", timestamp = DateTime.Now });
         }
 
         [HttpPost("GenerarRetencion")]
         public async Task<IActionResult> GenerarRetencion([FromBody] RetencionRequest request)
         {
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
+            ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+
+            string logoPath = null;
+            string rutaPDF = null;
+            string rutaXmlLocal = null;
+
             try
             {
+                // PASO 1: OBTENER CREDENCIALES DEL EMISOR
+                var credenciales = await _frappeCredentialsService.ObtenerCredencialesAsync(request.Emisor.RazonSocial);
+
+                string apiKey = null;
+                string apiSecret = null;
+                bool usandoCredencialesEmisor = false;
+
+                if (credenciales.Success &&
+                    credenciales.TieneApiKey &&
+                    credenciales.TieneApiSecret &&
+                    !string.IsNullOrEmpty(credenciales.ApiKey) &&
+                    !string.IsNullOrEmpty(credenciales.ApiSecret))
+                {
+                    apiKey = credenciales.ApiKey;
+                    apiSecret = credenciales.ApiSecret;
+                    usandoCredencialesEmisor = true;
+                }
+
+                // PASO 2: VERIFICAR CERTIFICADO
+                var verificacion = await _frappeCertService.VerificarCertificadoAsync(
+                    request.Emisor.RazonSocial,
+                    apiKey,
+                    apiSecret
+                );
+
+                if (!verificacion.Success)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        error = "Error al verificar certificado",
+                        detalles = new
+                        {
+                            error_detalle = verificacion.Error,
+                            usandoCredencialesEmisor = usandoCredencialesEmisor
+                        }
+                    });
+                }
+
+                if (!verificacion.Vigente)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        error = "Certificado no vigente o incompleto",
+                        detalles = new
+                        {
+                            vigente = verificacion.Vigente,
+                            tiene_archivo = verificacion.TieneArchivo,
+                            tiene_password = verificacion.TienePassword,
+                            nombre_archivo = verificacion.NombreArchivo,
+                            fecha_vencimiento = verificacion.FechaVencimiento,
+                            usandoCredencialesEmisor = usandoCredencialesEmisor
+                        }
+                    });
+                }
+
+                // PASO 3: OBTENER Y CARGAR CERTIFICADO
+                var certificado = await _frappeCertService.ObtenerCertificadoAsync(
+                    request.Emisor.RazonSocial,
+                    apiKey,
+                    apiSecret
+                );
+
+                if (!certificado.Success)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        error = $"No se pudo descargar el certificado: {certificado.Error}",
+                        usandoCredencialesEmisor = usandoCredencialesEmisor
+                    });
+                }
+
+                if (string.IsNullOrEmpty(certificado.Contrasena))
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        error = "No se recibió la contraseña del certificado desde Frappe"
+                    });
+                }
+
+                try
+                {
+                    _certificadoService.CargarDesdeBase64String(
+                        certificado.CertificadoBase64,
+                        certificado.Contrasena
+                    );
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        error = $"Error al cargar el certificado: {ex.Message}",
+                        detalle = "Verifique que el certificado y la contraseña sean correctos"
+                    });
+                }
+
+                // PASO 4: OBTENER LOGO
+                var logoResult = await _frappeLogoService.ObtenerLogoAsync(
+                    request.Emisor.RazonSocial,
+                    apiKey,
+                    apiSecret
+                );
+
+                if (logoResult.Success && !string.IsNullOrWhiteSpace(logoResult.LogoBase64))
+                {
+                    var logoFileName = $"logo_{request.Emisor.RUC}_{DateTime.Now:yyyyMMddHHmmss}.png";
+                    logoPath = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", logoFileName);
+
+                    var logoBytes = Convert.FromBase64String(logoResult.LogoBase64);
+                    await System.IO.File.WriteAllBytesAsync(logoPath, logoBytes);
+                }
+
+                // PASO 5: CONSTRUIR COMPROBANTE DE RETENCIÓN
                 var emisor = new Emisor
                 {
                     DireccionMatriz = request.Emisor.DireccionMatriz,
                     EnumTipoAmbiente = EnumParserHelper.ParseTipoAmbiente(request.Emisor.EnumTipoAmbiente),
-                    Logo = "/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica/Logo_UTPL.png",
+                    Logo = logoPath,
                     NombreComercial = request.Emisor.NombreComercial,
                     ObligadoContabilidad = request.Emisor.ObligadoContabilidad,
                     RazonSocial = request.Emisor.RazonSocial,
@@ -105,147 +253,124 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     retencion.InfoTributaria.EnumTipoEmision
                 );
 
+                // PASO 6: GENERAR Y FIRMAR XML
                 var comprobanteXml = ComprobanteRetencion_1_0_0Mapper.Map(retencion);
-
-                certificadoService.CargarDesdeP12("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica/signature.p12", "Compus1234");
-                var xmlFirmado = certificadoService.FirmarDocumento(comprobanteXml);
+                var xmlFirmado = _certificadoService.FirmarDocumento(comprobanteXml);
 
                 var nombreArchivoXml = $"COMPROBANTE_RETENCION_{retencion.InfoTributaria.ClaveAcceso}.xml";
-                xmlFirmado.Save(nombreArchivoXml);
+                rutaXmlLocal = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", nombreArchivoXml);
+                xmlFirmado.Save(rutaXmlLocal);
 
-                var envio = await webService.ValidarComprobanteAsync(xmlFirmado);
-                Console.WriteLine($"ESTADO DE COMPROBANTE DE ENVIO: {System.Text.Json.JsonSerializer.Serialize(envio, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })}");
+                // PASO 7: ENVIAR AL SRI
+                var envio = await _webService.ValidarComprobanteAsync(xmlFirmado);
 
-                if (envio.Ok)
+                if (!envio.Ok)
                 {
-                    System.Threading.Thread.Sleep(3000);
-                    var auto = await webService.AutorizacionComprobanteAsync(retencion.InfoTributaria.ClaveAcceso);
-                    var autorizacionData = auto.Data?.Autorizaciones?.Autorizacion?.FirstOrDefault();
-                    Console.WriteLine($"ESTADO DE COMPROBANTE DE AUTORIZACION: {System.Text.Json.JsonSerializer.Serialize(auto, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })}");
-
-                    if (auto.Ok)
-                    {
-                        Console.WriteLine("AUTORIZADO");
-
-                        if (autorizacionData != null)
-                        {
-                            retencion.Autorizacion.Numero = autorizacionData.NumeroAutorizacion;
-                            if (DateTimeOffset.TryParse(autorizacionData.FechaAutorizacion, out var fechaOffset))
-                            {
-                                retencion.Autorizacion.Fecha = fechaOffset.ToOffset(TimeSpan.FromHours(-5)).DateTime;
-                            }
-                            else
-                            {
-                                throw new Exception($"Fecha de autorización inválida: {autorizacionData.FechaAutorizacion}");
-                            }
-                        }
-
-                        // Generar PDF
-                        var rutaPDF = $"/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica/COMPROBANTE_RETENCION_{retencion.InfoTributaria.ClaveAcceso}.pdf";
-                        rIDEService.ComprobanteRetencion_1_0_0(retencion, rutaPDF);
-
-                        // Subir PDF al Frappe
-                        var respuestaUpload = await _frappeUploader.UploadFileAsync(
-                            rutaPDF,
-                            Path.GetFileName(rutaPDF),
-                            folder: "Home/Documento de Retencion/PDF"
-                        );
-                        Console.WriteLine("📤 Archivo PDF subido a Frappe:");
-                        Console.WriteLine(respuestaUpload);
-
-                        // Subir XML también (opcional)
-                        var rutaXML = $"/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica/COMPROBANTE_RETENCION_{retencion.InfoTributaria.ClaveAcceso}.xml";
-                        var respuestaXmlUpload = await _frappeUploader.UploadFileAsync(
-                            rutaXML,
-                            Path.GetFileName(rutaXML),
-                            folder: "Home/Documento de Retencion/XML"
-                        );
-                        Console.WriteLine("📤 Archivo XML subido a Frappe:");
-                        Console.WriteLine(respuestaXmlUpload);
-
-                        await FileCleanupHelper.DeleteFileAsync(rutaPDF);
-                        await FileCleanupHelper.DeleteFileAsync(rutaXML);
-
-                        var resultado = new
-                        {
-                            success = true,
-                            claveAcceso = retencion.InfoTributaria.ClaveAcceso,
-                            mensaje = "Retención autorizada, PDF generado y archivos subidos a Frappe correctamente",
-                            numeroAutorizacion = retencion.Autorizacion.Numero,
-                            fechaAutorizacion = retencion.Autorizacion.Fecha.ToString("yyyy-MM-dd HH:mm:ss"),
-                            respuestaFrappePDF = respuestaUpload,
-                            respuestaFrappeXML = respuestaXmlUpload
-                        };
-
-                        return Ok(resultado);
-                    }
-
-                    else
-                    {
-                        // Manejo de errores de autorización
-                        var mensajesAutorizacion = autorizacionData?.Mensajes?.Mensaje?
-                            .Select(m => new { m.Identificador, m.Mensaje_, m.Tipo, m.InformacionAdicional })
-                            .ToList();
-
-                        // Imprimir mensajes en consola
-                        if (mensajesAutorizacion != null && mensajesAutorizacion.Count > 0)
-                        {
-                            Console.WriteLine("MENSAJES DE AUTORIZACIÓN:");
-                            foreach (var msg in mensajesAutorizacion)
-                            {
-                                Console.WriteLine($"- Identificador: {msg.Identificador}");
-                                Console.WriteLine($"  Mensaje: {msg.Mensaje_}");
-                                Console.WriteLine($"  Tipo: {msg.Tipo}");
-                                Console.WriteLine($"  Información Adicional: {msg.InformacionAdicional}");
-                                Console.WriteLine("-------------------------------");
-                            }
-                        }
-                        else
-                        {
-                            Console.WriteLine("No hay mensajes de autorización disponibles.");
-                        }
-
-                        return Ok(new
-                        {
-                            success = false,
-                            estado = autorizacionData?.Estado,
-                            mensajes = mensajesAutorizacion
-                        });
-                    }
-                }
-                else
-                {
-                    // Manejo de errores de envío
                     var primerComprobante = envio.Data?.Comprobantes?.Comprobante?.FirstOrDefault();
                     var mensajesEnvio = primerComprobante?.Mensajes?.Mensaje
                         ?.Select(m => new { m.Identificador, m.Mensaje_, m.Tipo, m.InformacionAdicional })
                         .ToList();
 
-                    // Imprimir mensajes de envío en consola
-                    if (mensajesEnvio != null && mensajesEnvio.Count > 0)
-                    {
-                        Console.WriteLine("MENSAJES DE ENVÍO:");
-                        foreach (var msg in mensajesEnvio)
-                        {
-                            Console.WriteLine($"- Identificador: {msg.Identificador}");
-                            Console.WriteLine($"  Mensaje: {msg.Mensaje_}");
-                            Console.WriteLine($"  Tipo: {msg.Tipo}");
-                            Console.WriteLine($"  Información Adicional: {msg.InformacionAdicional}");
-                            Console.WriteLine("-------------------------------");
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("No hay mensajes de envío disponibles.");
-                    }
-
                     return Ok(new
                     {
                         success = false,
                         estado = envio.Data?.Estado,
+                        error = envio.Error,
                         mensajes = mensajesEnvio
                     });
                 }
+
+                // PASO 8: ESPERAR Y OBTENER AUTORIZACIÓN
+                await Task.Delay(3000);
+
+                var auto = await _webService.AutorizacionComprobanteAsync(retencion.InfoTributaria.ClaveAcceso);
+                var autorizacionData = auto.Data?.Autorizaciones?.Autorizacion?.FirstOrDefault();
+
+                if (!auto.Ok)
+                {
+                    var mensajesAutorizacion = autorizacionData?.Mensajes?.Mensaje
+                        ?.Select(m => new { m.Identificador, m.Mensaje_, m.Tipo, m.InformacionAdicional })
+                        .ToList();
+
+                    return Ok(new
+                    {
+                        success = false,
+                        estado = autorizacionData?.Estado,
+                        mensajes = mensajesAutorizacion
+                    });
+                }
+
+                // PASO 9: ACTUALIZAR DATOS DE AUTORIZACIÓN
+                if (autorizacionData != null)
+                {
+                    retencion.Autorizacion.Numero = autorizacionData.NumeroAutorizacion;
+                    if (DateTimeOffset.TryParse(autorizacionData.FechaAutorizacion, out var fechaOffset))
+                    {
+                        retencion.Autorizacion.Fecha = fechaOffset.ToOffset(TimeSpan.FromHours(-5)).DateTime;
+                    }
+                    else
+                    {
+                        throw new Exception($"Fecha de autorización inválida: {autorizacionData.FechaAutorizacion}");
+                    }
+                }
+
+                // PASO 10: GENERAR PDF
+                var nombrePdf = $"COMPROBANTE_RETENCION_{retencion.InfoTributaria.ClaveAcceso}.pdf";
+                rutaPDF = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", nombrePdf);
+                _rideService.ComprobanteRetencion_1_0_0(retencion, rutaPDF);
+
+                // PASO 11: SUBIR ARCHIVOS A FRAPPE
+                FrappeUploadResult respuestaUploadPDF;
+                FrappeUploadResult respuestaUploadXML;
+
+                if (usandoCredencialesEmisor)
+                {
+                    respuestaUploadPDF = await _frappeUploader.UploadFileAsync(
+                        filePath: rutaPDF,
+                        fileName: Path.GetFileName(rutaPDF),
+                        apiKey: apiKey,
+                        apiSecret: apiSecret,
+                        folder: "Home/Documento de Retencion/PDF"
+                    );
+
+                    respuestaUploadXML = await _frappeUploader.UploadFileAsync(
+                        filePath: rutaXmlLocal,
+                        fileName: nombreArchivoXml,
+                        apiKey: apiKey,
+                        apiSecret: apiSecret,
+                        folder: "Home/Documento de Retencion/XML"
+                    );
+                }
+                else
+                {
+                    respuestaUploadPDF = await _frappeUploader.UploadFileAsync(
+                        filePath: rutaPDF,
+                        fileName: Path.GetFileName(rutaPDF),
+                        folder: "Home/Documento de Retencion/PDF"
+                    );
+
+                    respuestaUploadXML = await _frappeUploader.UploadFileAsync(
+                        filePath: rutaXmlLocal,
+                        fileName: nombreArchivoXml,
+                        folder: "Home/Documento de Retencion/XML"
+                    );
+                }
+
+                // PASO 12: LIMPIAR ARCHIVOS TEMPORALES
+                await LimpiarArchivosTemporales(rutaPDF, rutaXmlLocal, logoPath);
+
+                // PASO 13: RETORNAR RESPUESTA EXITOSA
+                return Ok(new
+                {
+                    success = true,
+                    claveAcceso = retencion.InfoTributaria.ClaveAcceso,
+                    mensaje = "Retención autorizada, PDF generado y archivos subidos a Frappe correctamente",
+                    numeroAutorizacion = retencion.Autorizacion.Numero,
+                    fechaAutorizacion = retencion.Autorizacion.Fecha.ToString("yyyy-MM-dd HH:mm:ss"),
+                    respuestaFrappePDF = respuestaUploadPDF,
+                    respuestaFrappeXML = respuestaUploadXML,
+                    credencialesUsadas = usandoCredencialesEmisor ? "Emisor" : "Por defecto"
+                });
             }
             catch (Exception ex)
             {
@@ -253,8 +378,32 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 {
                     success = false,
                     error = ex.Message,
-                    stackTrace = ex.StackTrace
+                    stackTrace = ex.StackTrace,
+                    innerError = ex.InnerException?.Message,
+                    innerStackTrace = ex.InnerException?.StackTrace
                 });
+            }
+            finally
+            {
+                await LimpiarArchivosTemporales(rutaPDF, rutaXmlLocal, logoPath);
+            }
+        }
+
+        private async Task LimpiarArchivosTemporales(params string[] rutas)
+        {
+            foreach (var ruta in rutas)
+            {
+                if (!string.IsNullOrWhiteSpace(ruta) && System.IO.File.Exists(ruta))
+                {
+                    try
+                    {
+                        await FileCleanupHelper.DeleteFileAsync(ruta);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"No se pudo eliminar {Path.GetFileName(ruta)}: {ex.Message}");
+                    }
+                }
             }
         }
 
@@ -268,11 +417,8 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
             {
                 try
                 {
-                    Console.WriteLine($"Procesando impuesto con código: {impuesto.CodigoRetencion}");
-                    
                     var codigoRetencion = EnumParserHelper.ParseCodigoRetencion(impuesto.CodigoRetencion);
-                    Console.WriteLine($"Código parseado: {codigoRetencion.GetType().Name} = {codigoRetencion}");
-                    
+
                     if (codigoRetencion is EnumTipoRetencionRenta)
                     {
                         var impuestoRenta = new ComprobanteRetencion_1_0_0Modelo.ImpuestoRenta
@@ -283,8 +429,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                             CodigoRetencion = (EnumTipoRetencionRenta)codigoRetencion,
                             DocumentoSustento = MapearDocumentoSustento(impuesto.DocumentoSustento)
                         };
-                        
-                        Console.WriteLine($"Impuesto Renta creado - Base: {impuestoRenta.BaseImponible}, Código: {impuestoRenta.CodigoRetencion}");
+
                         resultado.Add(impuestoRenta);
                     }
                     else if (codigoRetencion is EnumTipoRetencionIVA)
@@ -298,14 +443,11 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                             DocumentoSustento = MapearDocumentoSustento(impuesto.DocumentoSustento)
                         };
 
-                        
-                        Console.WriteLine($"Impuesto IVA creado - Base: {impuestoIVA.BaseImponible}, Código: {impuestoIVA.CodigoRetencion}");
                         resultado.Add(impuestoIVA);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error al mapear impuesto: {ex.Message}");
                     throw new ArgumentException($"Error al mapear impuesto con código {impuesto.CodigoRetencion}: {ex.Message}", ex);
                 }
             }
@@ -322,10 +464,8 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                                     .Cast<EnumTipoDocumento>()
                                     .FirstOrDefault(e => e.GetAttributeOfType<SRICodigoAttribute>()?.Code == documentoRequest.CodDocumento.ToString());
 
-           if (!Enum.IsDefined(typeof(EnumTipoDocumento), tipoDocumento))
+            if (!Enum.IsDefined(typeof(EnumTipoDocumento), tipoDocumento))
                 throw new ArgumentException($"Código de documento inválido: {documentoRequest.CodDocumento}");
-
-            Console.WriteLine($"Código de documento a retener: {documentoRequest.CodDocumento} mapeado es {tipoDocumento}");
 
             return new DocumentoSustento
             {

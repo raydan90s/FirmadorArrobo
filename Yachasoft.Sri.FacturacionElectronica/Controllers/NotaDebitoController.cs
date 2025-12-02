@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
@@ -22,43 +23,188 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
     [ApiController]
     public class NotaDebitoController : ControllerBase
     {
-        private readonly Signer.ICertificadoService certificadoService;
-        private readonly WebService.ISriWebService webService;
-        private readonly Ride.IRIDEService rIDEService;
-        private readonly FrappeFileUploader _frappeUploader;
+        private readonly Signer.ICertificadoService _certificadoService;
+        private readonly WebService.ISriWebService _webService;
+        private readonly Ride.IRIDEService _rideService;
+        private readonly IFrappeFileUploader _frappeUploader;
+        private readonly FrappeCertificateService _frappeCertService;
+        private readonly FrappeLogoService _frappeLogoService;
+        private readonly IFrappeCredentialsService _frappeCredentialsService;
+
+        // Configuración global de SSL/TLS
+        static NotaDebitoController()
+        {
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
+            ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+            ServicePointManager.DefaultConnectionLimit = 100;
+            ServicePointManager.Expect100Continue = false;
+        }
 
         public NotaDebitoController(
             Signer.ICertificadoService certificadoService,
             WebService.ISriWebService webService,
-            Ride.IRIDEService rIDEService,
-            FrappeFileUploader frappeUploader)
+            Ride.IRIDEService rideService,
+            IFrappeFileUploader frappeUploader,
+            FrappeCertificateService frappeCertService,
+            FrappeLogoService frappeLogoService,
+            IFrappeCredentialsService frappeCredentialsService)
         {
-            this.certificadoService = certificadoService;
-            this.webService = webService;
-            this.rIDEService = rIDEService;
-            this._frappeUploader = frappeUploader;
+            _certificadoService = certificadoService;
+            _webService = webService;
+            _rideService = rideService;
+            _frappeUploader = frappeUploader;
+            _frappeCertService = frappeCertService;
+            _frappeLogoService = frappeLogoService;
+            _frappeCredentialsService = frappeCredentialsService;
+        }
+
+        [HttpGet("Test")]
+        public IActionResult Test()
+        {
+            return Ok(new { mensaje = "NotaDebito Controller funcionando correctamente", timestamp = DateTime.Now });
         }
 
         [HttpPost("GenerarNotaDebito")]
         public async Task<IActionResult> GenerarNotaDebito([FromBody] NotaDebitoRequest request)
         {
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
+            ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+
+            string logoPath = null;
+            string rutaPDF = null;
+            string rutaXmlLocal = null;
+
             try
             {
-                Console.WriteLine($"Fecha de emisión documento modificado: {request.DocumentoModificado.FechaEmisionDocumento}");
-                Console.WriteLine($"Fecha de emisión nota de débito: {request.FechaEmision}");
+                // PASO 1: OBTENER CREDENCIALES DEL EMISOR
+                var credenciales = await _frappeCredentialsService.ObtenerCredencialesAsync(request.Emisor.RazonSocial);
 
+                string apiKey = null;
+                string apiSecret = null;
+                bool usandoCredencialesEmisor = false;
+
+                if (credenciales.Success &&
+                    credenciales.TieneApiKey &&
+                    credenciales.TieneApiSecret &&
+                    !string.IsNullOrEmpty(credenciales.ApiKey) &&
+                    !string.IsNullOrEmpty(credenciales.ApiSecret))
+                {
+                    apiKey = credenciales.ApiKey;
+                    apiSecret = credenciales.ApiSecret;
+                    usandoCredencialesEmisor = true;
+                }
+
+                // PASO 2: VERIFICAR CERTIFICADO
+                var verificacion = await _frappeCertService.VerificarCertificadoAsync(
+                    request.Emisor.RazonSocial,
+                    apiKey,
+                    apiSecret
+                );
+
+                if (!verificacion.Success)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        error = "Error al verificar certificado",
+                        detalles = new
+                        {
+                            error_detalle = verificacion.Error,
+                            usandoCredencialesEmisor = usandoCredencialesEmisor
+                        }
+                    });
+                }
+
+                if (!verificacion.Vigente)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        error = "Certificado no vigente o incompleto",
+                        detalles = new
+                        {
+                            vigente = verificacion.Vigente,
+                            tiene_archivo = verificacion.TieneArchivo,
+                            tiene_password = verificacion.TienePassword,
+                            nombre_archivo = verificacion.NombreArchivo,
+                            fecha_vencimiento = verificacion.FechaVencimiento,
+                            usandoCredencialesEmisor = usandoCredencialesEmisor
+                        }
+                    });
+                }
+
+                // PASO 3: OBTENER Y CARGAR CERTIFICADO
+                var certificado = await _frappeCertService.ObtenerCertificadoAsync(
+                    request.Emisor.RazonSocial,
+                    apiKey,
+                    apiSecret
+                );
+
+                if (!certificado.Success)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        error = $"No se pudo descargar el certificado: {certificado.Error}",
+                        usandoCredencialesEmisor = usandoCredencialesEmisor
+                    });
+                }
+
+                if (string.IsNullOrEmpty(certificado.Contrasena))
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        error = "No se recibió la contraseña del certificado desde Frappe"
+                    });
+                }
+
+                try
+                {
+                    _certificadoService.CargarDesdeBase64String(
+                        certificado.CertificadoBase64,
+                        certificado.Contrasena
+                    );
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        error = $"Error al cargar el certificado: {ex.Message}",
+                        detalle = "Verifique que el certificado y la contraseña sean correctos"
+                    });
+                }
+
+                // PASO 4: OBTENER LOGO
+                var logoResult = await _frappeLogoService.ObtenerLogoAsync(
+                    request.Emisor.RazonSocial,
+                    apiKey,
+                    apiSecret
+                );
+
+                if (logoResult.Success && !string.IsNullOrWhiteSpace(logoResult.LogoBase64))
+                {
+                    var logoFileName = $"logo_{request.Emisor.RUC}_{DateTime.Now:yyyyMMddHHmmss}.png";
+                    logoPath = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", logoFileName);
+
+                    var logoBytes = Convert.FromBase64String(logoResult.LogoBase64);
+                    await System.IO.File.WriteAllBytesAsync(logoPath, logoBytes);
+                }
+
+                // PASO 5: CONSTRUIR NOTA DE DÉBITO
                 var emisor = new Emisor
                 {
                     DireccionMatriz = request.Emisor.DireccionMatriz,
                     EnumTipoAmbiente = EnumParserHelper.ParseTipoAmbiente(request.Emisor.EnumTipoAmbiente),
-                    Logo = "/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica/Logo_UTPL.png",
+                    Logo = logoPath,
                     NombreComercial = request.Emisor.NombreComercial,
                     ObligadoContabilidad = request.Emisor.ObligadoContabilidad,
                     RazonSocial = request.Emisor.RazonSocial,
                     RegimenMicroEmpresas = request.Emisor.RegimenMicroEmpresas,
                     RUC = request.Emisor.RUC,
                     ContribuyenteEspecial = request.Emisor.ContribuyenteEspecial,
-                    AgenteRetencion = request.Emisor.AgenteRetencion,
+                    AgenteRetencion = request.Emisor.AgenteRetencion
                 };
 
                 var establecimiento = new Establecimiento
@@ -73,15 +219,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     Codigo = request.CodigoPuntoEmision,
                     Establecimiento = establecimiento
                 };
-
-                string direccionCliente = null;
-                if (request.InfoAdicional != null)
-                {
-                    var direccionAdicional = request.InfoAdicional.FirstOrDefault(ca =>
-                        ca.Nombre.Equals("Direccion", StringComparison.OrdinalIgnoreCase) ||
-                        ca.Nombre.Equals("Dirección", StringComparison.OrdinalIgnoreCase));
-                    direccionCliente = direccionAdicional?.Valor;
-                }
 
                 var motivos = request.Motivos.Select(m => new Motivo
                 {
@@ -102,14 +239,12 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 {
                     PuntoEmision = puntoEmision,
                     FechaEmision = request.FechaEmision,
-
                     Sujeto = new Sujeto
                     {
                         Identificacion = request.Cliente.Identificacion,
                         RazonSocial = request.Cliente.RazonSocial,
                         TipoIdentificador = EnumParserHelper.ParseTipoIdentificacion(request.Cliente.TipoIdentificador)
                     },
-
                     InfoNotaDebito = new NotaDebito_1_0_0Modelo.InfoNotaDebito
                     {
                         DocumentoModificado = documentoModificado,
@@ -118,7 +253,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                         ValorTotal = request.InfoNotaDebito.ValorTotal,
                         Pagos = MapperHelper.MapearPagosParaDocumento(request.InfoNotaDebito.Pagos)
                     },
-
                     Motivos = motivos,
                     InfoAdicional = request.InfoAdicional
                 };
@@ -137,172 +271,168 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     notaDebito.InfoTributaria.EnumTipoEmision
                 );
 
+                // PASO 6: GENERAR Y FIRMAR XML
                 var xmlObj = NotaDebito_1_0_0Mapper.Map(notaDebito);
 
                 var xmlDoc = new XmlDocument();
                 using (var memoryStream = new MemoryStream())
                 {
-                    var serializer = new XmlSerializer(typeof(notaDebito));
+                    var serializer = new XmlSerializer(xmlObj.GetType());
                     serializer.Serialize(memoryStream, xmlObj);
                     memoryStream.Position = 0;
                     xmlDoc.Load(memoryStream);
                 }
 
                 xmlDoc.DocumentElement.SetAttribute("id", "comprobante");
-
-                certificadoService.CargarDesdeP12(
-                    "/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica/signature.p12",
-                    "Compus1234"
-                );
-                var xmlFirmado = certificadoService.FirmarDocumento(xmlDoc);
+                var xmlFirmado = _certificadoService.FirmarDocumento(xmlDoc);
 
                 var nombreArchivoXml = $"NOTADEBITO_{notaDebito.InfoTributaria.ClaveAcceso}.xml";
-                xmlFirmado.Save(nombreArchivoXml);
+                rutaXmlLocal = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", nombreArchivoXml);
+                xmlFirmado.Save(rutaXmlLocal);
 
-                var envio = await webService.ValidarComprobanteAsync(xmlFirmado);
-                Console.WriteLine($"ESTADO DE COMPROBANTE DE ENVIO: {System.Text.Json.JsonSerializer.Serialize(envio, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })}");
+                // PASO 7: ENVIAR AL SRI
+                var envio = await _webService.ValidarComprobanteAsync(xmlFirmado);
 
-                if (envio.Ok)
-                {
-                    System.Threading.Thread.Sleep(3000);
-
-                    var auto = await webService.AutorizacionComprobanteAsync(notaDebito.InfoTributaria.ClaveAcceso);
-                    var autorizacionData = auto.Data?.Autorizaciones?.Autorizacion?.FirstOrDefault();
-                    Console.WriteLine($"ESTADO DE COMPROBANTE DE AUTORIZACION: {System.Text.Json.JsonSerializer.Serialize(auto, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })}");
-
-                    Console.WriteLine("📌 Datos completos de la autorización recibida:");
-                    Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(autorizacionData, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
-
-                    if (auto.Ok)
-                    {
-                        Console.WriteLine("AUTORIZADO");
-
-                        if (autorizacionData != null)
-                        {
-                            Console.WriteLine("📌 Fecha de autorización recibida del SRI:");
-                            Console.WriteLine(autorizacionData.FechaAutorizacion);
-
-                            notaDebito.Autorizacion.Numero = autorizacionData.NumeroAutorizacion;
-                            if (DateTimeOffset.TryParse(autorizacionData.FechaAutorizacion, out var fechaOffset))
-                            {
-                                notaDebito.Autorizacion.Fecha = fechaOffset.ToOffset(TimeSpan.FromHours(-5)).DateTime;
-                            }
-                            else
-                            {
-                                throw new Exception($"Fecha de autorización inválida: {autorizacionData.FechaAutorizacion}");
-                            }
-                        }
-
-                        var rutaPDF = $"/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica/NOTADEBITO_{notaDebito.InfoTributaria.ClaveAcceso}.pdf";
-                        rIDEService.NotaDebito_1_0_0(notaDebito, rutaPDF);
-
-                        var respuestaUploadPDF = await _frappeUploader.UploadFileAsync(
-                            rutaPDF,
-                            Path.GetFileName(rutaPDF),
-                            folder: "Home/Nota de Débito/PDF"
-                        );
-                        Console.WriteLine("📤 Archivo PDF subido a Frappe:");
-                        Console.WriteLine(respuestaUploadPDF);
-
-                        var rutaXML = $"/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica/NOTADEBITO_{notaDebito.InfoTributaria.ClaveAcceso}.xml";
-                        var respuestaUploadXML = await _frappeUploader.UploadFileAsync(
-                            rutaXML,
-                            Path.GetFileName(rutaXML),
-                            folder: "Home/Nota de Débito/XML"
-                        );
-                        Console.WriteLine("📤 Archivo XML subido a Frappe:");
-                        Console.WriteLine(respuestaUploadXML);
-
-                        await FileCleanupHelper.DeleteFileAsync(rutaPDF);
-                        await FileCleanupHelper.DeleteFileAsync(rutaXML);
-
-                        var resultado = new
-                        {
-                            success = true,
-                            claveAcceso = notaDebito.InfoTributaria.ClaveAcceso,
-                            mensaje = "Nota de Débito autorizada, PDF generado y archivos subidos a Frappe correctamente",
-                            numeroAutorizacion = notaDebito.Autorizacion.Numero,
-                            fechaAutorizacion = notaDebito.Autorizacion.Fecha.ToString("yyyy-MM-dd HH:mm:ss"),
-                            respuestaFrappePDF = respuestaUploadPDF,
-                            respuestaFrappeXML = respuestaUploadXML
-                        };
-
-                        return Ok(resultado);
-                    }
-                    else
-                    {
-                        var mensajesAutorizacion = autorizacionData?.Mensajes?.Mensaje?
-                            .Select(m => new { m.Identificador, m.Mensaje_, m.Tipo, m.InformacionAdicional })
-                            .ToList();
-
-                        if (mensajesAutorizacion != null && mensajesAutorizacion.Count > 0)
-                        {
-                            Console.WriteLine("MENSAJES DE AUTORIZACIÓN:");
-                            foreach (var msg in mensajesAutorizacion)
-                            {
-                                Console.WriteLine($"- Identificador: {msg.Identificador}");
-                                Console.WriteLine($"  Mensaje: {msg.Mensaje_}");
-                                Console.WriteLine($"  Tipo: {msg.Tipo}");
-                                Console.WriteLine($"  Información Adicional: {msg.InformacionAdicional}");
-                                Console.WriteLine("-------------------------------");
-                            }
-                        }
-                        else
-                        {
-                            Console.WriteLine("No hay mensajes de autorización disponibles.");
-                        }
-
-                        return Ok(new
-                        {
-                            success = false,
-                            estado = autorizacionData?.Estado,
-                            mensajes = mensajesAutorizacion
-                        });
-                    }
-                }
-                else
+                if (!envio.Ok)
                 {
                     var primerComprobante = envio.Data?.Comprobantes?.Comprobante?.FirstOrDefault();
                     var mensajesEnvio = primerComprobante?.Mensajes?.Mensaje
                         ?.Select(m => new { m.Identificador, m.Mensaje_, m.Tipo, m.InformacionAdicional })
                         .ToList();
 
-                    if (mensajesEnvio != null && mensajesEnvio.Count > 0)
-                    {
-                        Console.WriteLine("MENSAJES DE ENVÍO:");
-                        foreach (var msg in mensajesEnvio)
-                        {
-                            Console.WriteLine($"- Identificador: {msg.Identificador}");
-                            Console.WriteLine($"  Mensaje: {msg.Mensaje_}");
-                            Console.WriteLine($"  Tipo: {msg.Tipo}");
-                            Console.WriteLine($"  Información Adicional: {msg.InformacionAdicional}");
-                            Console.WriteLine("-------------------------------");
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("No hay mensajes de envío disponibles.");
-                    }
-
                     return Ok(new
                     {
                         success = false,
                         estado = envio.Data?.Estado,
+                        error = envio.Error,
                         mensajes = mensajesEnvio
                     });
                 }
+
+                // PASO 8: ESPERAR Y OBTENER AUTORIZACIÓN
+                await Task.Delay(3000);
+
+                var auto = await _webService.AutorizacionComprobanteAsync(notaDebito.InfoTributaria.ClaveAcceso);
+                var autorizacionData = auto.Data?.Autorizaciones?.Autorizacion?.FirstOrDefault();
+
+                if (!auto.Ok)
+                {
+                    var mensajesAutorizacion = autorizacionData?.Mensajes?.Mensaje
+                        ?.Select(m => new { m.Identificador, m.Mensaje_, m.Tipo, m.InformacionAdicional })
+                        .ToList();
+
+                    return Ok(new
+                    {
+                        success = false,
+                        estado = autorizacionData?.Estado,
+                        mensajes = mensajesAutorizacion
+                    });
+                }
+
+                // PASO 9: ACTUALIZAR DATOS DE AUTORIZACIÓN
+                if (autorizacionData != null)
+                {
+                    notaDebito.Autorizacion.Numero = autorizacionData.NumeroAutorizacion;
+                    if (DateTimeOffset.TryParse(autorizacionData.FechaAutorizacion, out var fechaOffset))
+                    {
+                        notaDebito.Autorizacion.Fecha = fechaOffset.ToOffset(TimeSpan.FromHours(-5)).DateTime;
+                    }
+                    else
+                    {
+                        throw new Exception($"Fecha de autorización inválida: {autorizacionData.FechaAutorizacion}");
+                    }
+                }
+
+                // PASO 10: GENERAR PDF
+                var nombrePdf = $"NOTADEBITO_{notaDebito.InfoTributaria.ClaveAcceso}.pdf";
+                rutaPDF = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", nombrePdf);
+                _rideService.NotaDebito_1_0_0(notaDebito, rutaPDF);
+
+                // PASO 11: SUBIR ARCHIVOS A FRAPPE
+                FrappeUploadResult respuestaUploadPDF;
+                FrappeUploadResult respuestaUploadXML;
+
+                if (usandoCredencialesEmisor)
+                {
+                    respuestaUploadPDF = await _frappeUploader.UploadFileAsync(
+                        filePath: rutaPDF,
+                        fileName: Path.GetFileName(rutaPDF),
+                        apiKey: apiKey,
+                        apiSecret: apiSecret,
+                        folder: "Home/Nota de Débito/PDF"
+                    );
+
+                    respuestaUploadXML = await _frappeUploader.UploadFileAsync(
+                        filePath: rutaXmlLocal,
+                        fileName: nombreArchivoXml,
+                        apiKey: apiKey,
+                        apiSecret: apiSecret,
+                        folder: "Home/Nota de Débito/XML"
+                    );
+                }
+                else
+                {
+                    respuestaUploadPDF = await _frappeUploader.UploadFileAsync(
+                        filePath: rutaPDF,
+                        fileName: Path.GetFileName(rutaPDF),
+                        folder: "Home/Nota de Débito/PDF"
+                    );
+
+                    respuestaUploadXML = await _frappeUploader.UploadFileAsync(
+                        filePath: rutaXmlLocal,
+                        fileName: nombreArchivoXml,
+                        folder: "Home/Nota de Débito/XML"
+                    );
+                }
+
+                // PASO 12: LIMPIAR ARCHIVOS TEMPORALES
+                await LimpiarArchivosTemporales(rutaPDF, rutaXmlLocal, logoPath);
+
+                // PASO 13: RETORNAR RESPUESTA EXITOSA
+                return Ok(new
+                {
+                    success = true,
+                    claveAcceso = notaDebito.InfoTributaria.ClaveAcceso,
+                    mensaje = "Nota de Débito autorizada, PDF generado y archivos subidos a Frappe correctamente",
+                    numeroAutorizacion = notaDebito.Autorizacion.Numero,
+                    fechaAutorizacion = notaDebito.Autorizacion.Fecha.ToString("yyyy-MM-dd HH:mm:ss"),
+                    respuestaFrappePDF = respuestaUploadPDF,
+                    respuestaFrappeXML = respuestaUploadXML,
+                    credencialesUsadas = usandoCredencialesEmisor ? "Emisor" : "Por defecto"
+                });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ ERROR: {ex.Message}");
-                Console.WriteLine(ex.StackTrace);
-
                 return BadRequest(new
                 {
                     success = false,
                     error = ex.Message,
-                    stackTrace = ex.StackTrace
+                    stackTrace = ex.StackTrace,
+                    innerError = ex.InnerException?.Message,
+                    innerStackTrace = ex.InnerException?.StackTrace
                 });
+            }
+            finally
+            {
+                await LimpiarArchivosTemporales(rutaPDF, rutaXmlLocal, logoPath);
+            }
+        }
+
+        private async Task LimpiarArchivosTemporales(params string[] rutas)
+        {
+            foreach (var ruta in rutas)
+            {
+                if (!string.IsNullOrWhiteSpace(ruta) && System.IO.File.Exists(ruta))
+                {
+                    try
+                    {
+                        await FileCleanupHelper.DeleteFileAsync(ruta);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"No se pudo eliminar {Path.GetFileName(ruta)}: {ex.Message}");
+                    }
+                }
             }
         }
     }
