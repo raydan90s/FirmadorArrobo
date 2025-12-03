@@ -41,16 +41,11 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 var client = _httpClientFactory.CreateClient();
                 client.Timeout = TimeSpan.FromSeconds(30);
 
-                // Consultar contribuyente
-                var contribuyenteUrl = SRI_CONTRIBUYENTE_URL + request.Ruc;
-                Console.WriteLine($"🔍 Consultando contribuyente: {contribuyenteUrl}");
-                
+                var contribuyenteUrl = SRI_CONTRIBUYENTE_URL + request.Ruc;                
                 var responseContribuyente = await client.GetAsync(contribuyenteUrl);
 
-                // Validar código de estado HTTP
                 if (responseContribuyente.StatusCode == System.Net.HttpStatusCode.NoContent)
                 {
-                    Console.WriteLine($"⚠️ RUC no encontrado: {request.Ruc}");
                     return Ok(new ConsultaSriResponse
                     {
                         Error = "El RUC ingresado no existe o no es válido"
@@ -67,17 +62,13 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
 
                 var contribuyenteJson = await responseContribuyente.Content.ReadAsStringAsync();
                 
-                // Validar que la respuesta no esté vacía
                 if (string.IsNullOrWhiteSpace(contribuyenteJson))
                 {
-                    Console.WriteLine($"⚠️ Respuesta vacía del SRI para RUC: {request.Ruc}");
                     return Ok(new ConsultaSriResponse
                     {
                         Error = "El RUC ingresado no existe o no es válido"
                     });
                 }
-
-                Console.WriteLine($"📄 JSON contribuyente recibido: {contribuyenteJson.Substring(0, Math.Min(200, contribuyenteJson.Length))}...");
 
                 var options = new JsonSerializerOptions 
                 { 
@@ -98,25 +89,19 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 }
 
                 var contribuyenteSri = contribuyenteList[0];
-
-                // Consultar establecimientos
                 var establecimientoUrl = SRI_ESTABLECIMIENTO_URL + request.Ruc;
-                Console.WriteLine($"🔍 Consultando establecimientos: {establecimientoUrl}");
                 
                 var responseEstablecimiento = await client.GetAsync(establecimientoUrl);
 
                 List<EstablecimientoDataSri> establecimientos = null;
 
-                // Los establecimientos pueden no existir o devolver 204
                 if (responseEstablecimiento.IsSuccessStatusCode && 
                     responseEstablecimiento.StatusCode != System.Net.HttpStatusCode.NoContent)
                 {
                     var establecimientoJson = await responseEstablecimiento.Content.ReadAsStringAsync();
                     
                     if (!string.IsNullOrWhiteSpace(establecimientoJson))
-                    {
-                        Console.WriteLine($"📄 JSON establecimientos recibido: {establecimientoJson.Substring(0, Math.Min(200, establecimientoJson.Length))}...");
-                        
+                    {                        
                         establecimientos = JsonSerializer.Deserialize<List<EstablecimientoDataSri>>(
                             establecimientoJson,
                             options
@@ -124,7 +109,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     }
                 }
 
-                // Mapear a estructura de respuesta - FORMATO EXACTO PARA FRAPPE
                 var response = new ConsultaSriResponse
                 {
                     Ruc = request.Ruc,
@@ -162,10 +146,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     Error = null
                 };
 
-                Console.WriteLine($"✅ Contribuyente: {contribuyenteSri.RazonSocial}");
-                Console.WriteLine($"✅ Establecimientos: {establecimientos?.Count ?? 0}");
-
-                // IMPORTANTE: Configurar opciones de serialización para camelCase
                 var jsonOptions = new JsonSerializerOptions
                 {
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -177,7 +157,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
             }
             catch (HttpRequestException httpEx)
             {
-                Console.WriteLine($"❌ Error HTTP: {httpEx.Message}");
                 return Ok(new ConsultaSriResponse
                 {
                     Error = $"Error de conexión con el SRI: {httpEx.Message}"
@@ -185,18 +164,13 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
             }
             catch (JsonException jsonEx)
             {
-                Console.WriteLine($"❌ Error JSON: {jsonEx.Message}");
-                // Si hay error al deserializar JSON, significa que el RUC no existe o la respuesta está vacía
                 return Ok(new ConsultaSriResponse
                 {
                     Error = "El RUC ingresado no existe o no es válido"
                 });
             }
             catch (Exception ex)
-            {
-                Console.WriteLine($"❌ ERROR: {ex.Message}");
-                Console.WriteLine(ex.StackTrace);
-                
+            {                
                 return Ok(new ConsultaSriResponse
                 {
                     Error = "Error al procesar la consulta. Intente nuevamente."

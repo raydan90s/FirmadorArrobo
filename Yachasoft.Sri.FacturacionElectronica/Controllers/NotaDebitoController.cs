@@ -31,7 +31,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
         private readonly FrappeLogoService _frappeLogoService;
         private readonly IFrappeCredentialsService _frappeCredentialsService;
 
-        // Configuración global de SSL/TLS
         static NotaDebitoController()
         {
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
@@ -76,7 +75,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
 
             try
             {
-                // PASO 1: OBTENER CREDENCIALES DEL EMISOR
                 var credenciales = await _frappeCredentialsService.ObtenerCredencialesAsync(request.Emisor.RazonSocial);
 
                 string apiKey = null;
@@ -94,7 +92,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     usandoCredencialesEmisor = true;
                 }
 
-                // PASO 2: VERIFICAR CERTIFICADO
                 var verificacion = await _frappeCertService.VerificarCertificadoAsync(
                     request.Emisor.RazonSocial,
                     apiKey,
@@ -133,7 +130,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     });
                 }
 
-                // PASO 3: OBTENER Y CARGAR CERTIFICADO
                 var certificado = await _frappeCertService.ObtenerCertificadoAsync(
                     request.Emisor.RazonSocial,
                     apiKey,
@@ -176,7 +172,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     });
                 }
 
-                // PASO 4: OBTENER LOGO
                 var logoResult = await _frappeLogoService.ObtenerLogoAsync(
                     request.Emisor.RazonSocial,
                     apiKey,
@@ -192,7 +187,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     await System.IO.File.WriteAllBytesAsync(logoPath, logoBytes);
                 }
 
-                // PASO 5: CONSTRUIR NOTA DE DÉBITO
                 var emisor = new Emisor
                 {
                     DireccionMatriz = request.Emisor.DireccionMatriz,
@@ -271,7 +265,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     notaDebito.InfoTributaria.EnumTipoEmision
                 );
 
-                // PASO 6: GENERAR Y FIRMAR XML
                 var xmlObj = NotaDebito_1_0_0Mapper.Map(notaDebito);
 
                 var xmlDoc = new XmlDocument();
@@ -290,7 +283,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 rutaXmlLocal = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", nombreArchivoXml);
                 xmlFirmado.Save(rutaXmlLocal);
 
-                // PASO 7: ENVIAR AL SRI
                 var envio = await _webService.ValidarComprobanteAsync(xmlFirmado);
 
                 if (!envio.Ok)
@@ -309,7 +301,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     });
                 }
 
-                // PASO 8: ESPERAR Y OBTENER AUTORIZACIÓN
                 await Task.Delay(3000);
 
                 var auto = await _webService.AutorizacionComprobanteAsync(notaDebito.InfoTributaria.ClaveAcceso);
@@ -329,7 +320,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     });
                 }
 
-                // PASO 9: ACTUALIZAR DATOS DE AUTORIZACIÓN
                 if (autorizacionData != null)
                 {
                     notaDebito.Autorizacion.Numero = autorizacionData.NumeroAutorizacion;
@@ -343,12 +333,10 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     }
                 }
 
-                // PASO 10: GENERAR PDF
                 var nombrePdf = $"NOTADEBITO_{notaDebito.InfoTributaria.ClaveAcceso}.pdf";
                 rutaPDF = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", nombrePdf);
                 _rideService.NotaDebito_1_0_0(notaDebito, rutaPDF);
 
-                // PASO 11: SUBIR ARCHIVOS A FRAPPE
                 FrappeUploadResult respuestaUploadPDF;
                 FrappeUploadResult respuestaUploadXML;
 
@@ -385,10 +373,8 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     );
                 }
 
-                // PASO 12: LIMPIAR ARCHIVOS TEMPORALES
                 await LimpiarArchivosTemporales(rutaPDF, rutaXmlLocal, logoPath);
 
-                // PASO 13: RETORNAR RESPUESTA EXITOSA
                 return Ok(new
                 {
                     success = true,
