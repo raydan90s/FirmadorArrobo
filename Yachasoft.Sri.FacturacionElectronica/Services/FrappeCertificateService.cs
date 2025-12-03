@@ -62,9 +62,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             }
         }
 
-        /// <summary>
-        /// 🔥 MÉTODO ACTUALIZADO: Verifica el certificado CON credenciales del emisor
-        /// </summary>
         public async Task<VerificarCertificadoResult> VerificarCertificadoAsync(
             string emisor, 
             string apiKey = null, 
@@ -86,11 +83,9 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 using var req = new HttpRequestMessage(HttpMethod.Post, apiUrl);
                 req.Content = jsonContent;
                 
-                // 🔥 USAR CREDENCIALES ESPECÍFICAS DEL EMISOR SI ESTÁN DISPONIBLES
                 if (!string.IsNullOrEmpty(apiKey) && !string.IsNullOrEmpty(apiSecret))
                 {
                     req.Headers.Add("Authorization", $"token {apiKey}:{apiSecret}");
-                  
                 }
                 else
                 {
@@ -99,17 +94,11 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     
                 }
 
-                
-
                 var res = await _httpClient.SendAsync(req);
                 var responseBody = await res.Content.ReadAsStringAsync();
 
-                
-
                 if (!res.IsSuccessStatusCode)
                 {
-            
-                    
                     return new VerificarCertificadoResult
                     {
                         Success = false,
@@ -118,13 +107,10 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     };
                 }
 
-                
-                
                 using var doc = JsonDocument.Parse(responseBody);
 
                 if (!doc.RootElement.TryGetProperty("message", out var message))
-                {
-                    
+                {    
                     return new VerificarCertificadoResult
                     {
                         Success = false,
@@ -151,8 +137,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
 
                 bool vigente = tieneVigente && tieneArchivo && tienePassword;
                 
-              
-
                 return new VerificarCertificadoResult
                 {
                     Success = true,
@@ -164,9 +148,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 };
             }
             catch (Exception ex)
-            {
-              
-                
+            {  
                 return new VerificarCertificadoResult
                 {
                     Success = false,
@@ -176,9 +158,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             }
         }
 
-        /// <summary>
-        /// 🔥 MÉTODO ACTUALIZADO: Obtiene el certificado CON credenciales del emisor
-        /// </summary>
         public async Task<ObtenerCertificadoResult> ObtenerCertificadoAsync(
             string emisor,
             string apiKey = null,
@@ -194,9 +173,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                         Error = "Emisor vacío"
                     };
                 }
-
-              
-
                 var apiUrl = $"{_settings.Url.TrimEnd('/')}/api/method/sri.sri.doctype.certificado_electronico.certificado_electronico.obtener_certificado";
 
                 var requestBody = new { emisor = emisor };
@@ -209,7 +185,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 using var req = new HttpRequestMessage(HttpMethod.Post, apiUrl);
                 req.Content = jsonContent;
                 
-                // 🔥 USAR CREDENCIALES ESPECÍFICAS DEL EMISOR
                 if (!string.IsNullOrEmpty(apiKey) && !string.IsNullOrEmpty(apiSecret))
                 {
                     req.Headers.Add("Authorization", $"token {apiKey}:{apiSecret}");
@@ -221,25 +196,17 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 
                 }
 
-             
-
                 var res = await _httpClient.SendAsync(req);
                 var responseBody = await res.Content.ReadAsStringAsync();
 
-                
-
                 if (!res.IsSuccessStatusCode)
                 {
-                   
-                    
                     return new ObtenerCertificadoResult
                     {
                         Success = false,
                         Error = $"Frappe respondió {res.StatusCode}: {responseBody}"
                     };
                 }
-
-                
 
                 using var doc = JsonDocument.Parse(responseBody);
                 
@@ -253,15 +220,11 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     };
                 }
 
-                // Verificar si hay error en la respuesta
                 if (message.TryGetProperty("success", out var successProp) && !successProp.GetBoolean())
                 {
                     var errorMsg = message.TryGetProperty("error", out var errProp) 
                         ? errProp.GetString() 
                         : "Error desconocido desde Frappe";
-                    
-                   
-                    
                     return new ObtenerCertificadoResult
                     {
                         Success = false,
@@ -269,7 +232,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     };
                 }
 
-                // Extraer el archivo en base64
                 if (!message.TryGetProperty("archivo", out var archivo))
                 {
                    
@@ -301,17 +263,12 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     };
                 }
 
-                // Extraer contraseña
                 string password = null;
                 if (message.TryGetProperty("contrasena", out var passProp))
                 {
                     password = passProp.GetString();
                 }
 
-              
-                
-
-                // Extraer nombre del archivo
                 string nombreArchivo = null;
                 if (archivo.TryGetProperty("nombre", out var nombreProp))
                 {
@@ -331,8 +288,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             }
             catch (Exception ex)
             {
-                
-                
                 return new ObtenerCertificadoResult
                 {
                     Success = false,
@@ -341,9 +296,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             }
         }
 
-        /// <summary>
-        /// ⚠️ MÉTODO LEGACY - Usa ObtenerCertificadoAsync en su lugar
-        /// </summary>
         public async Task<DownloadCertificateResult> DownloadCertificateAsync(
             string emisor,
             string apiKey = null,
@@ -351,7 +303,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
         {
             try
             {
-                // Primero obtener el certificado en Base64
                 var certificado = await ObtenerCertificadoAsync(emisor, apiKey, apiSecret);
                 
                 if (!certificado.Success)
@@ -363,7 +314,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     };
                 }
 
-                // Decodificar y guardar en archivo temporal
                 var bytes = Convert.FromBase64String(certificado.CertificadoBase64);
                 if (bytes == null || bytes.Length == 0)
                 {
@@ -374,8 +324,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     };
                 }
 
-             
-
                 var fileName = !string.IsNullOrEmpty(certificado.NombreArchivo)
                     ? certificado.NombreArchivo
                     : $"{emisor.Replace(" ", "_")}.p12";
@@ -385,14 +333,9 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 
                 await File.WriteAllBytesAsync(tempPath, bytes);
 
-              
-                
-                // Validar certificado
                 try
                 {
-                   
                     var testCert = new System.Security.Cryptography.X509Certificates.X509Certificate2(tempPath, certificado.Contrasena);
-                    
                     testCert.Dispose();
                 }
                 catch (Exception ex)
@@ -444,13 +387,10 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                         File.Delete(file);
                         deletedCount++;
                     }
-                }
-
-               
+                }     
             }
             catch (Exception ex)
-            {
-                
+            {    
             }
         }
 

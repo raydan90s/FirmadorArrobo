@@ -62,10 +62,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
 
             try
             {
-
-
-                // 🔥 PASO 0: OBTENER CREDENCIALES DEL EMISOR PRIMERO
-
                 var credenciales = await _frappeCredentialsService.ObtenerCredencialesAsync(request.Emisor.RazonSocial);
 
                 string apiKey = null;
@@ -81,12 +77,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     apiKey = credenciales.ApiKey;
                     apiSecret = credenciales.ApiSecret;
                     usandoCredencialesEmisor = true;
-
-
                 }
-
-
-
                 var verificacion = await _frappeCertService.VerificarCertificadoAsync(
                     request.Emisor.RazonSocial,
                     apiKey,
@@ -95,7 +86,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
 
                 if (!verificacion.Success)
                 {
-
                     return BadRequest(new
                     {
                         success = false,
@@ -110,7 +100,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
 
                 if (!verificacion.Vigente)
                 {
-
                     return BadRequest(new
                     {
                         success = false,
@@ -126,10 +115,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                         }
                     });
                 }
-
-
-
-
                 var certificado = await _frappeCertService.ObtenerCertificadoAsync(
                     request.Emisor.RazonSocial,
                     apiKey,
@@ -138,8 +123,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
 
                 if (!certificado.Success)
                 {
-
-
                     return BadRequest(new
                     {
                         success = false,
@@ -152,7 +135,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
 
                 if (string.IsNullOrEmpty(certificado.Contrasena))
                 {
-
                     return BadRequest(new
                     {
                         success = false,
@@ -171,7 +153,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 }
                 catch (Exception ex)
                 {
-
                     return BadRequest(new
                     {
                         success = false,
@@ -180,14 +161,11 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     });
                 }
 
-
-
                 var logoResult = await _frappeLogoService.ObtenerLogoAsync(
                 request.Emisor.RazonSocial,
                 apiKey,
                 apiSecret
                 );
-
 
                 if (logoResult.Success && !string.IsNullOrWhiteSpace(logoResult.LogoBase64))
                 {
@@ -198,12 +176,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
 
                     var logoBytes = Convert.FromBase64String(logoResult.LogoBase64);
                     await System.IO.File.WriteAllBytesAsync(logoPath, logoBytes);
-
-
                 }
-
-
-
 
                 var emisor = new Emisor
                 {
@@ -276,9 +249,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     factura.InfoTributaria.EnumTipoEmision
                 );
 
-
-
-
                 var xmlObj = Factura_1_0_0Mapper.Map(factura);
 
                 var xmlDoc = new XmlDocument();
@@ -297,11 +267,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 rutaXmlLocal = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", nombreArchivoXml);
                 xmlFirmado.Save(rutaXmlLocal);
 
-
-
                 var envio = await _webService.ValidarComprobanteAsync(xmlFirmado);
-
-
 
                 if (!envio.Ok)
                 {
@@ -310,11 +276,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     var mensajesEnvio = primerComprobante?.Mensajes?.Mensaje
                         ?.Select(m => new { m.Identificador, m.Mensaje_, m.Tipo, m.InformacionAdicional })
                         .ToList();
-
-
-
-                 
-
+                    
                     return Ok(new
                     {
                         success = false,
@@ -327,15 +289,11 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
 
                 await Task.Delay(3000);
 
-
                 var auto = await _webService.AutorizacionComprobanteAsync(factura.InfoTributaria.ClaveAcceso);
                 var autorizacionData = auto.Data?.Autorizaciones?.Autorizacion?.FirstOrDefault();
 
-
                 if (!auto.Ok)
                 {
-
-
                     var mensajesAutorizacion = autorizacionData?.Mensajes?.Mensaje
                         ?.Select(m => new { m.Identificador, m.Mensaje_, m.Tipo, m.InformacionAdicional })
                         .ToList();
@@ -348,9 +306,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     });
                 }
 
-
-
-                // Actualizar datos de autorización
                 if (autorizacionData != null)
                 {
                     factura.Autorizacion.Numero = autorizacionData.NumeroAutorizacion;
@@ -362,8 +317,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     {
                         throw new Exception($"Fecha de autorización inválida: {autorizacionData.FechaAutorizacion}");
                     }
-
-
                 }
 
 
@@ -371,16 +324,11 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 rutaPDF = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", nombrePdf);
                 _rideService.Factura_1_0_0(factura, rutaPDF);
 
-
-
-
                 FrappeUploadResult respuestaUploadPDF;
                 FrappeUploadResult respuestaUploadXML;
 
                 if (usandoCredencialesEmisor)
                 {
-
-
                     respuestaUploadPDF = await _frappeUploader.UploadFileAsync(
                         filePath: rutaPDF,
                         fileName: Path.GetFileName(rutaPDF),
@@ -399,8 +347,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 }
                 else
                 {
-
-
                     respuestaUploadPDF = await _frappeUploader.UploadFileAsync(
                         filePath: rutaPDF,
                         fileName: Path.GetFileName(rutaPDF),
@@ -414,12 +360,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     );
                 }
 
-
-
-               
-
                 await LimpiarArchivosTemporales(rutaPDF, rutaXmlLocal, logoPath);
-
 
                 return Ok(new
                 {
@@ -435,10 +376,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
             }
             catch (Exception ex)
             {
-
-
-                
-
                 return BadRequest(new
                 {
                     success = false,
@@ -449,7 +386,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
             }
             finally
             {
-                // Limpieza de seguridad en el bloque finally
                 await LimpiarArchivosTemporales(rutaPDF, rutaXmlLocal, logoPath);
             }
         }
@@ -463,7 +399,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     try
                     {
                         await FileCleanupHelper.DeleteFileAsync(ruta);
-                        Console.WriteLine($"Archivo eliminado: {Path.GetFileName(ruta)}");
                     }
                     catch (Exception ex)
                     {

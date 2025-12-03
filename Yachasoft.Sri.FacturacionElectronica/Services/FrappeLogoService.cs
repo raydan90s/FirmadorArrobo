@@ -27,9 +27,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             _settings = options?.Value ?? throw new ArgumentNullException(nameof(options));
         }
 
-        /// <summary>
-        /// 🔥 MÉTODO ACTUALIZADO: OBTIENE LOGO CON CREDENCIALES DEL EMISOR
-        /// </summary>
         public async Task<ObtenerLogoResult> ObtenerLogoAsync(
             string emisor,
             string apiKey = null,
@@ -46,8 +43,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     };
                 }
 
-
-
                 var apiUrl = $"{_settings.Url.TrimEnd('/')}/api/method/sri.sri.doctype.certificado_electronico.certificado_electronico.obtener_logo";
 
                 var requestBody = new { emisor };
@@ -60,7 +55,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 using var req = new HttpRequestMessage(HttpMethod.Post, apiUrl);
                 req.Content = jsonContent;
 
-                // 🔥 USAR CREDENCIALES DEL EMISOR SI VIENEN
                 if (!string.IsNullOrEmpty(apiKey) && !string.IsNullOrEmpty(apiSecret))
                 {
                     req.Headers.Add("Authorization", $"token {apiKey}:{apiSecret}");
@@ -72,26 +66,17 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
 
                 }
 
-
-
                 var res = await _httpClient.SendAsync(req);
                 var responseBody = await res.Content.ReadAsStringAsync();
 
-
-
                 if (!res.IsSuccessStatusCode)
                 {
-
-
                     return new ObtenerLogoResult
                     {
                         Success = false,
                         Error = $"HTTP {res.StatusCode}: {responseBody}"
                     };
                 }
-
-
-
                 using var doc = JsonDocument.Parse(responseBody);
 
                 if (!doc.RootElement.TryGetProperty("message", out var message))
@@ -104,15 +89,11 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     };
                 }
 
-                // VALIDAR SI FRAPPE DEVUELVE success=false
                 if (message.TryGetProperty("success", out var successProp) && !successProp.GetBoolean())
                 {
                     var errorMsg = message.TryGetProperty("error", out var errProp)
                         ? errProp.GetString()
                         : "Error desconocido desde Frappe";
-
-
-
                     return new ObtenerLogoResult
                     {
                         Success = false,
@@ -120,10 +101,8 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     };
                 }
 
-                // EXTRAER LOGO
                 if (!message.TryGetProperty("logo", out var logo))
                 {
-
                     return new ObtenerLogoResult
                     {
                         Success = false,
@@ -158,8 +137,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     nombreArchivo = nombreProp.GetString();
                 }
 
-
-
                 return new ObtenerLogoResult
                 {
                     Success = true,
@@ -170,8 +147,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             }
             catch (Exception ex)
             {
-
-
                 return new ObtenerLogoResult
                 {
                     Success = false,

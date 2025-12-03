@@ -28,42 +28,27 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
         private readonly HttpClient _httpClient;
         private readonly string _frappeUrl;
 
-        // ✅ CONSTRUCTOR SIN CREDENCIALES REQUERIDAS (endpoint público)
         public FrappeCredentialsService(HttpClient httpClient, IConfiguration configuration)
         {
             _frappeUrl = configuration["Frappe:Url"] 
                 ?? throw new ArgumentNullException("Frappe:Url", "Frappe:Url no configurado en appsettings.json");
 
-            // ✅ Configura el cliente inyectado
             httpClient.BaseAddress = new Uri(_frappeUrl);
             httpClient.Timeout = TimeSpan.FromMinutes(2);
-            
-            // ⚠️ NO configurar Authorization - El endpoint es público
-            
-            _httpClient = httpClient;
-
-         
+            _httpClient = httpClient;    
         }
 
         public async Task<FrappeCredentialsResult> ObtenerCredencialesAsync(string emisor)
         {
             try
             {
-              
-
-                // 🔥 Endpoint público que retorna credenciales del emisor
                 var endpoint = "/api/method/sri.sri.doctype.certificado_electronico.certificado_electronico.obtener_apikeys";
                
-
-                // ✅ Construir el payload JSON
                 var payload = new JObject
                 {
                     ["emisor"] = emisor
                 };
 
-                
-
-                // 🚀 Hacer la petición POST
                 var content = new StringContent(
                     payload.ToString(),
                     Encoding.UTF8,
@@ -73,11 +58,8 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 var response = await _httpClient.PostAsync(endpoint, content);
                 var jsonResponse = await response.Content.ReadAsStringAsync();
 
-               
-
                 if (!response.IsSuccessStatusCode)
                 {
-                    
                     return new FrappeCredentialsResult
                     {
                         Success = false,
@@ -86,20 +68,15 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     };
                 }
 
-                // ✅ Parsear respuesta
                 var json = JObject.Parse(jsonResponse);
                 var message = json["message"];
 
-             
-
-                // ✅ Validar campo "success"
                 var success = message?["success"]?.Value<bool>() ?? false;
 
                 if (!success)
                 {
                     var error = message?["error"]?.ToString() ?? "El servidor retornó success=false";
                 
-                    
                     return new FrappeCredentialsResult
                     {
                         Success = false,
@@ -108,15 +85,11 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     };
                 }
 
-                // 🔑 Extraer credenciales
                 var apiKey = message?["api_key"]?.ToString();
                 var apiSecret = message?["api_secret"]?.ToString();
                 var tieneApiKey = message?["tiene_api_key"]?.Value<bool>() ?? false;
                 var tieneApiSecret = message?["tiene_api_secret"]?.Value<bool>() ?? false;
 
-            
-
-                // ⚠️ Validar que las credenciales existan
                 if (!tieneApiKey || !tieneApiSecret || 
                     string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(apiSecret))
                 {
@@ -132,8 +105,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                     };
                 }
 
-                
-
                 return new FrappeCredentialsResult
                 {
                     Success = true,
@@ -145,9 +116,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                 };
             }
             catch (HttpRequestException httpEx)
-            {
-                
-                
+            {          
                 return new FrappeCredentialsResult
                 {
                     Success = false,
@@ -157,8 +126,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             }
             catch (Exception ex)
             {
-              
-                
                 return new FrappeCredentialsResult
                 {
                     Success = false,
