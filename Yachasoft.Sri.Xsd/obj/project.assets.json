@@ -64,19 +64,19 @@
     ]
   },
   "packageFolders": {
-    "/home/bitnami/.nuget/packages/": {}
+    "C:\\Users\\Raydan\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Xsd/Yachasoft.Sri.Xsd.csproj",
+      "projectUniqueName": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Xsd\\Yachasoft.Sri.Xsd.csproj",
       "projectName": "Yachasoft.Sri.Xsd",
-      "projectPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Xsd/Yachasoft.Sri.Xsd.csproj",
-      "packagesPath": "/home/bitnami/.nuget/packages/",
-      "outputPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Xsd/obj/",
+      "projectPath": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Xsd\\Yachasoft.Sri.Xsd.csproj",
+      "packagesPath": "C:\\Users\\Raydan\\.nuget\\packages\\",
+      "outputPath": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Xsd\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/bitnami/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\Raydan\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net7.0"
@@ -88,11 +88,11 @@
         "net7.0": {
           "targetAlias": "net7.0",
           "projectReferences": {
-            "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Core/Yachasoft.Sri.Core.csproj": {
-              "projectPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Core/Yachasoft.Sri.Core.csproj"
+            "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Core\\Yachasoft.Sri.Core.csproj": {
+              "projectPath": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Core\\Yachasoft.Sri.Core.csproj"
             },
-            "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Modelos/Yachasoft.Sri.Modelos.csproj": {
-              "projectPath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.Modelos/Yachasoft.Sri.Modelos.csproj"
+            "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Modelos\\Yachasoft.Sri.Modelos.csproj": {
+              "projectPath": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Modelos\\Yachasoft.Sri.Modelos.csproj"
             }
           }
         }
@@ -122,7 +122,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/home/bitnami/.dotnet/sdk/7.0.410/RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.410\\RuntimeIdentifierGraph.json"
       }
     }
   }

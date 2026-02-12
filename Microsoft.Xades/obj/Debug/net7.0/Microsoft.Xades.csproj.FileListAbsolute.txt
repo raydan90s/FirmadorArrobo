@@ -21,3 +21,14 @@ C:\Users\Sistemas\Documents\GeneradorPDF\Microsoft.Xades\obj\Debug\net7.0\Micros
 C:\Users\Sistemas\Documents\GeneradorPDF\Microsoft.Xades\obj\Debug\net7.0\refint\Microsoft.Xades.dll
 C:\Users\Sistemas\Documents\GeneradorPDF\Microsoft.Xades\obj\Debug\net7.0\Microsoft.Xades.pdb
 C:\Users\Sistemas\Documents\GeneradorPDF\Microsoft.Xades\obj\Debug\net7.0\ref\Microsoft.Xades.dll
+D:\GitHub\GeneradorPDF\Microsoft.Xades\bin\Debug\net7.0\Microsoft.Xades.deps.json
+D:\GitHub\GeneradorPDF\Microsoft.Xades\bin\Debug\net7.0\Microsoft.Xades.dll
+D:\GitHub\GeneradorPDF\Microsoft.Xades\bin\Debug\net7.0\Microsoft.Xades.pdb
+D:\GitHub\GeneradorPDF\Microsoft.Xades\bin\Debug\net7.0\XAdES.xml
+D:\GitHub\GeneradorPDF\Microsoft.Xades\obj\Debug\net7.0\Microsoft.Xades.csproj.AssemblyReference.cache
+D:\GitHub\GeneradorPDF\Microsoft.Xades\obj\Debug\net7.0\Microsoft.Xades.GeneratedMSBuildEditorConfig.editorconfig
+D:\GitHub\GeneradorPDF\Microsoft.Xades\obj\Debug\net7.0\Microsoft.Xades.csproj.CoreCompileInputs.cache
+D:\GitHub\GeneradorPDF\Microsoft.Xades\obj\Debug\net7.0\Microsoft.Xades.dll
+D:\GitHub\GeneradorPDF\Microsoft.Xades\obj\Debug\net7.0\refint\Microsoft.Xades.dll
+D:\GitHub\GeneradorPDF\Microsoft.Xades\obj\Debug\net7.0\Microsoft.Xades.pdb
+D:\GitHub\GeneradorPDF\Microsoft.Xades\obj\Debug\net7.0\ref\Microsoft.Xades.dll

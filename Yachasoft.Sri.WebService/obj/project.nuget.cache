@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "DRbNOVXzcZyWwFTdWj+VRRmwfownceLFH8B00u1DowOCZQQU3+hIDjKLN276EoVkjd1/mpLstm85qu4kLmZkbw==",
+  "dgSpecHash": "8JAAlX++/JeaaH0gQX87hJ0d3i0P6Xc9Ql55FPH47iSyluw6JSu5kdgfDi0+wfP0CgV0XG8oEI0+9DpCUgWf2w==",
   "success": true,
-  "projectFilePath": "/home/bitnami/GeneradorPDF/Yachasoft.Sri.WebService/Yachasoft.Sri.WebService.csproj",
+  "projectFilePath": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.WebService\\Yachasoft.Sri.WebService.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

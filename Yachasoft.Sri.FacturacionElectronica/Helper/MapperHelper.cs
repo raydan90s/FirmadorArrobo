@@ -27,8 +27,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             {
                 try
                 {
-                    Console.WriteLine($"Procesando impuesto detalle con código: {(imp is ImpuestoCreditoRequest icr ? icr.CodigoPorcentaje : "N/A")}");
-
                     EnumTipoImpuestoIVA? codigoPorcentaje = null;
 
                     if (imp is ImpuestoCreditoRequest icr2)
@@ -44,7 +42,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                         CodigoPorcentaje = (EnumTipoImpuestoIVA)codigoPorcentaje
                     });
 
-                    Console.WriteLine($"Impuesto detalle mapeado correctamente - Base: {imp.BaseImponible}, Código: {codigoPorcentaje}");
                 }
                 catch (Exception ex)
                 {
@@ -66,8 +63,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             {
                 try
                 {
-                    Console.WriteLine($"Procesando detalle con subsidio: {det.Descripcion}");
-
                     var detalle = new DetalleDocumentoItemPrecioSubsidio
                     {
                         Item = new Item
@@ -81,18 +76,15 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                         Descuento = det.Descuento,
                         PrecioTotalSinImpuesto = det.PrecioTotalSinImpuesto,
                         
-                        // ✅ USAR EL NUEVO MÉTODO:
                         Impuestos = MapearImpuestosDetalleDesdeImpuestoRequest(det.Impuestos),
                         
                         DetallesAdicionales = det.DetallesAdicionales
                     };
 
                     detalles.Add(detalle);
-                    Console.WriteLine($"✅ Detalle con subsidio mapeado correctamente: {det.CodigoPrincipal} - {det.Descripcion}");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"❌ Error al mapear detalle con subsidio: {ex.Message}");
                     throw new ArgumentException($"Error al mapear detalle {det.Descripcion}: {ex.Message}", ex);
                 }
             }
@@ -111,8 +103,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             {
                 try
                 {
-                    Console.WriteLine($"Procesando detalle: {det.Descripcion}");
-
                     var detalle = new DetalleDocumentoItemPrecio
                     {
                         Item = new Item
@@ -126,18 +116,15 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                         Descuento = det.Descuento,
                         PrecioTotalSinImpuesto = det.PrecioTotalSinImpuesto,
                         
-                        // ✅ USAR EL NUEVO MÉTODO:
                         Impuestos = MapearImpuestosDetalleDesdeImpuestoRequest(det.Impuestos),
                         
                         DetallesAdicionales = det.DetallesAdicionales
                     };
 
                     detalles.Add(detalle);
-                    Console.WriteLine($"✅ Detalle mapeado correctamente: {det.CodigoPrincipal} - {det.Descripcion}");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"❌ Error al mapear detalle: {ex.Message}");
                     throw new ArgumentException($"Error al mapear detalle {det.Descripcion}: {ex.Message}", ex);
                 }
             }
@@ -164,8 +151,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             {
                 try
                 {
-                    Console.WriteLine($"Procesando pago con forma: {pago.FormaPago}");
-
                     var formaPago = EnumParserHelper.ParseFormaPago(pago.FormaPago);
 
                     pagos.Add(new Pago
@@ -175,12 +160,9 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                         Plazo = pago.Plazo,
                         UnidadTiempo = pago.UnidadTiempo
                     });
-
-                    Console.WriteLine($"Pago mapeado correctamente: {formaPago} - ${pago.Total}");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error al mapear pago: {ex.Message}");
                     throw new ArgumentException($"Error al mapear forma de pago {pago.FormaPago}: {ex.Message}", ex);
                 }
             }
@@ -199,10 +181,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             {
                 try
                 {
-                    Console.WriteLine($"Procesando impuesto venta con código: {imp.CodigoPorcentaje}");
-
                     var codigoPorcentaje = EnumParserHelper.ParseCodigoIVA(imp.CodigoPorcentaje);
-                    Console.WriteLine($"Código parseado: {codigoPorcentaje}");
 
                     impuestos.Add(new ImpuestoVentaIVA
                     {
@@ -212,11 +191,9 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                         CodigoPorcentaje = codigoPorcentaje
                     });
 
-                    Console.WriteLine($"Impuesto venta mapeado correctamente - Base: {imp.BaseImponible}, Código: {codigoPorcentaje}");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error al mapear impuesto venta: {ex.Message}");
                     throw new ArgumentException($"Error al mapear impuesto con código {imp.CodigoPorcentaje}: {ex.Message}", ex);
                 }
             }
@@ -228,8 +205,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
         {
             if (detalles == null || !detalles.Any())
                 throw new ArgumentException("Debe proporcionar al menos un detalle para calcular los impuestos");
-
-            Console.WriteLine($"📊 Calculando TotalConImpuestos desde {detalles.Count} detalles (Liquidación)...");
 
             var impuestosAgrupados = detalles
                 .SelectMany(d => d.Impuestos.OfType<ImpuestoIVA>())
@@ -284,8 +259,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             if (detalles == null || !detalles.Any())
                 throw new ArgumentException("Debe proporcionar al menos un detalle para calcular los impuestos");
 
-            Console.WriteLine($"📊 Calculando TotalConImpuestos desde {detalles.Count} detalles (Factura)...");
-
             var impuestosAgrupados = detalles
                 .SelectMany(d => d.Impuestos.OfType<ImpuestoIVA>())
                 .GroupBy(i => i.CodigoPorcentaje)
@@ -320,8 +293,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
             {
                 try
                 {
-                    Console.WriteLine($"Procesando ImpuestoRequest con código: {imp.CodigoPorcentaje}");
-
                     var codigoPorcentaje = EnumParserHelper.ParseCodigoIVA(imp.CodigoPorcentaje);
 
                     impuestos.Add(new ImpuestoIVA
@@ -332,11 +303,9 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
                         CodigoPorcentaje = codigoPorcentaje
                     });
 
-                    Console.WriteLine($"✅ ImpuestoRequest mapeado - Base: {imp.BaseImponible}, Código: {codigoPorcentaje}");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"❌ Error al mapear ImpuestoRequest: {ex.Message}");
                     throw new ArgumentException($"Error al mapear impuesto: {ex.Message}", ex);
                 }
             }

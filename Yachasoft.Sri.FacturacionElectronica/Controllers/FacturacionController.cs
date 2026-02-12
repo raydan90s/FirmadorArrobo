@@ -52,9 +52,24 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
         [HttpPost("GenerarFactura")]
         public async Task<IActionResult> GenerarFactura([FromBody] FacturaRequest request)
         {
+            Console.WriteLine("========================================");
+            Console.WriteLine("📥 DEBUG: JSON RECIBIDO (REQUEST)");
+            Console.WriteLine("========================================");
+            try
+            {
+                var jsonDebug = Newtonsoft.Json.JsonConvert.SerializeObject(request, Newtonsoft.Json.Formatting.Indented);
+                Console.WriteLine(jsonDebug);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ No se pudo serializar el request para debug: {ex.Message}");
+            }
+            Console.WriteLine("========================================");
 
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
             ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+            ServicePointManager.DefaultConnectionLimit = 10;
+            ServicePointManager.Expect100Continue = false;
 
             string logoPath = null;
             string rutaPDF = null;
@@ -62,94 +77,54 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
 
             try
             {
-                var credenciales = await _frappeCredentialsService.ObtenerCredencialesAsync(request.Emisor.RazonSocial);
+                var tempDir = Path.GetTempPath();
 
-                string apiKey = null;
-                string apiSecret = null;
-                bool usandoCredencialesEmisor = false;
+                // ✅ NUEVAS RUTAS LOCALES PARA DESARROLLO
+                var rutaCertificadoLocal = @"D:\GitHub\GeneradorPDF\Yachasoft.Sri.FacturacionElectronica\signature.p12";
+                var rutaLogoLocal = @"D:\GitHub\GeneradorPDF\Yachasoft.Sri.FacturacionElectronica\logo.png";
+                var contrasenaP12 = "Compus1234"; // Contraseña hardcodeada para desarrollo
 
-                if (credenciales.Success &&
-                    credenciales.TieneApiKey &&
-                    credenciales.TieneApiSecret &&
-                    !string.IsNullOrEmpty(credenciales.ApiKey) &&
-                    !string.IsNullOrEmpty(credenciales.ApiSecret))
+                // ✅ LÓGICA: Si viene en el request, usar eso. Si no, usar archivos locales
+                string certificadoP12Base64;
+                string contrasenaP12Final;
+
+                if (string.IsNullOrEmpty(request.CertificadoP12Base64))
                 {
-                    apiKey = credenciales.ApiKey;
-                    apiSecret = credenciales.ApiSecret;
-                    usandoCredencialesEmisor = true;
-                }
-                var verificacion = await _frappeCertService.VerificarCertificadoAsync(
-                    request.Emisor.RazonSocial,
-                    apiKey,
-                    apiSecret
-                );
-
-                if (!verificacion.Success)
-                {
-                    return BadRequest(new
+                    Console.WriteLine("🔧 MODO DESARROLLO: Usando certificado local");
+                    
+                    if (!System.IO.File.Exists(rutaCertificadoLocal))
                     {
-                        success = false,
-                        error = "Error al verificar certificado",
-                        detalles = new
-                        {
-                            error_detalle = verificacion.Error,
-                            usandoCredencialesEmisor = usandoCredencialesEmisor
-                        }
-                    });
-                }
+                        return BadRequest(new 
+                        { 
+                            success = false, 
+                            error = $"Certificado local no encontrado en: {rutaCertificadoLocal}" 
+                        });
+                    }
 
-                if (!verificacion.Vigente)
+                    var certBytes = await System.IO.File.ReadAllBytesAsync(rutaCertificadoLocal);
+                    certificadoP12Base64 = Convert.ToBase64String(certBytes);
+                    contrasenaP12Final = string.IsNullOrEmpty(request.ContrasenaP12) ? contrasenaP12 : request.ContrasenaP12;
+                    
+                    Console.WriteLine($"✅ Certificado cargado desde: {rutaCertificadoLocal}");
+                    Console.WriteLine($"✅ Tamaño: {certBytes.Length:N0} bytes");
+                }
+                else
                 {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        error = "Certificado no vigente o incompleto",
-                        detalles = new
-                        {
-                            vigente = verificacion.Vigente,
-                            tiene_archivo = verificacion.TieneArchivo,
-                            tiene_password = verificacion.TienePassword,
-                            nombre_archivo = verificacion.NombreArchivo,
-                            fecha_vencimiento = verificacion.FechaVencimiento,
-                            usandoCredencialesEmisor = usandoCredencialesEmisor
-                        }
-                    });
-                }
-                var certificado = await _frappeCertService.ObtenerCertificadoAsync(
-                    request.Emisor.RazonSocial,
-                    apiKey,
-                    apiSecret
-                );
+                    Console.WriteLine("📤 MODO PRODUCCIÓN: Usando certificado del request");
+                    certificadoP12Base64 = request.CertificadoP12Base64;
+                    contrasenaP12Final = request.ContrasenaP12;
 
-                if (!certificado.Success)
-                {
-                    return BadRequest(new
+                    if (string.IsNullOrEmpty(contrasenaP12Final))
                     {
-                        success = false,
-                        error = $"No se pudo descargar el certificado: {certificado.Error}",
-                        usandoCredencialesEmisor = usandoCredencialesEmisor
-                    });
+                        return BadRequest(new { success = false, error = "Contraseña del certificado requerida" });
+                    }
                 }
 
-
-
-                if (string.IsNullOrEmpty(certificado.Contrasena))
-                {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        error = "No se recibió la contraseña del certificado desde Frappe"
-                    });
-                }
-
-
+                // Cargar certificado
                 try
                 {
-                    _certificadoService.CargarDesdeBase64String(
-                        certificado.CertificadoBase64,
-                        certificado.Contrasena
-                    );
-
+                    _certificadoService.CargarDesdeBase64String(certificadoP12Base64, contrasenaP12Final);
+                    Console.WriteLine("✅ Certificado cargado correctamente");
                 }
                 catch (Exception ex)
                 {
@@ -161,21 +136,30 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     });
                 }
 
-                var logoResult = await _frappeLogoService.ObtenerLogoAsync(
-                request.Emisor.RazonSocial,
-                apiKey,
-                apiSecret
-                );
-
-                if (logoResult.Success && !string.IsNullOrWhiteSpace(logoResult.LogoBase64))
+                // ✅ MANEJO DEL LOGO
+                if (string.IsNullOrEmpty(request.LogoBase64))
                 {
-
-
+                    Console.WriteLine("🔧 MODO DESARROLLO: Usando logo local");
+                    
+                    if (System.IO.File.Exists(rutaLogoLocal))
+                    {
+                        logoPath = rutaLogoLocal;
+                        Console.WriteLine($"✅ Logo cargado desde: {rutaLogoLocal}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"⚠️ Logo local no encontrado en: {rutaLogoLocal}");
+                        Console.WriteLine("⚠️ Continuando sin logo");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("📤 MODO PRODUCCIÓN: Usando logo del request");
                     var logoFileName = $"logo_{request.Emisor.RUC}_{DateTime.Now:yyyyMMddHHmmss}.png";
-                    logoPath = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", logoFileName);
-
-                    var logoBytes = Convert.FromBase64String(logoResult.LogoBase64);
+                    logoPath = Path.Combine(tempDir, logoFileName);
+                    var logoBytes = Convert.FromBase64String(request.LogoBase64);
                     await System.IO.File.WriteAllBytesAsync(logoPath, logoBytes);
+                    Console.WriteLine($"✅ Logo temporal creado: {logoPath}");
                 }
 
                 var emisor = new Emisor
@@ -207,15 +191,24 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
 
                 string direccionCliente = request.InfoAdicional?
                     .FirstOrDefault(ca => ca.Nombre.Equals("Direccion", StringComparison.OrdinalIgnoreCase) ||
-                                         ca.Nombre.Equals("Dirección", StringComparison.OrdinalIgnoreCase))
+                                        ca.Nombre.Equals("Dirección", StringComparison.OrdinalIgnoreCase))
                     ?.Valor;
 
                 var detallesMapeados = MapperHelper.MapearDetallesConSubsidio(request.Detalles);
 
+                DateTime fechaEmision;
+                if (!DateTime.TryParse(request.FechaEmision, out fechaEmision))
+                {
+                    fechaEmision = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                        DateTime.UtcNow,
+                        "SA Pacific Standard Time"
+                    );
+                }
+
                 var factura = new Factura_1_0_0Modelo.Factura
                 {
                     PuntoEmision = puntoEmision,
-                    FechaEmision = request.FechaEmision,
+                    FechaEmision = fechaEmision,
                     Sujeto = new Sujeto
                     {
                         Identificacion = request.Cliente.Identificacion,
@@ -249,6 +242,14 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     factura.InfoTributaria.EnumTipoEmision
                 );
 
+                Console.WriteLine("========================================");
+                Console.WriteLine("🔑 DEBUG DE CLAVE DE ACCESO");
+                Console.WriteLine("========================================");
+                Console.WriteLine($"Fecha usada: {factura.FechaEmision:dd-MM-yyyy HH:mm:ss.fff}");
+                Console.WriteLine($"Secuencial: {factura.InfoTributaria.Secuencial}");
+                Console.WriteLine($"Clave generada: {factura.InfoTributaria.ClaveAcceso}");
+                Console.WriteLine("========================================");
+
                 var xmlObj = Factura_1_0_0Mapper.Map(factura);
 
                 var xmlDoc = new XmlDocument();
@@ -260,122 +261,459 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     xmlDoc.Load(memoryStream);
                 }
 
+                var fechaNode = xmlDoc.SelectSingleNode("//fechaEmision");
+                if (fechaNode != null)
+                {
+                    var formato3 = $"{fechaEmision.Day:D2}/{fechaEmision.Month:D2}/{fechaEmision.Year}";
+                    fechaNode.InnerText = formato3;
+                }
+
                 xmlDoc.DocumentElement.SetAttribute("id", "comprobante");
                 var xmlFirmado = _certificadoService.FirmarDocumento(xmlDoc);
 
                 var nombreArchivoXml = $"FACTURA_{factura.InfoTributaria.ClaveAcceso}.xml";
-                rutaXmlLocal = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", nombreArchivoXml);
+                rutaXmlLocal = Path.Combine(tempDir, nombreArchivoXml);
                 xmlFirmado.Save(rutaXmlLocal);
 
-                var envio = await _webService.ValidarComprobanteAsync(xmlFirmado);
-
-                if (!envio.Ok)
+                // ========================================
+                // ✅ ENVÍO AL SRI CON LOGGING COMPLETO
+                // ========================================
+                Console.WriteLine("========================================");
+                Console.WriteLine("📤 ENVIANDO FACTURA AL SRI");
+                Console.WriteLine("========================================");
+                dynamic envio = null;
+                
+                try
                 {
-
-                    var primerComprobante = envio.Data?.Comprobantes?.Comprobante?.FirstOrDefault();
-                    var mensajesEnvio = primerComprobante?.Mensajes?.Mensaje
-                        ?.Select(m => new { m.Identificador, m.Mensaje_, m.Tipo, m.InformacionAdicional })
-                        .ToList();
+                    envio = await _webService.ValidarComprobanteAsync(xmlFirmado);
                     
+                    Console.WriteLine("========================================");
+                    Console.WriteLine("📥 RESPUESTA COMPLETA DEL SRI - ENVÍO");
+                    Console.WriteLine("========================================");
+                    Console.WriteLine($"✓ envio != null: {envio != null}");
+                    Console.WriteLine($"✓ envio.Ok: {envio?.Ok}");
+                    Console.WriteLine($"✓ envio.Error: '{envio?.Error}'");
+                    Console.WriteLine($"✓ envio.Data != null: {envio?.Data != null}");
+                    
+                    if (envio?.Data != null)
+                    {
+                        Console.WriteLine($"✓ envio.Data.GetType(): {envio.Data.GetType().FullName}");
+                        
+                        // Intentar serializar a JSON
+                        try
+                        {
+                            var jsonEnvio = Newtonsoft.Json.JsonConvert.SerializeObject(envio, Newtonsoft.Json.Formatting.Indented);
+                            Console.WriteLine("--- INICIO JSON COMPLETO DE ENVÍO ---");
+                            Console.WriteLine(jsonEnvio);
+                            Console.WriteLine("--- FIN JSON COMPLETO DE ENVÍO ---");
+                        }
+                        catch (Exception exJson)
+                        {
+                            Console.WriteLine($"⚠️ No se pudo serializar a JSON: {exJson.Message}");
+                        }
+                        
+                        // Inspeccionar propiedades manualmente
+                        Console.WriteLine("--- PROPIEDADES DE envio.Data ---");
+                        try
+                        {
+                            var estado = envio.Data.Estado;
+                            Console.WriteLine($"✓ Estado: '{estado}'");
+                            Console.WriteLine($"✓ Estado (tipo): {estado?.GetType().FullName}");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"✗ Error al leer Estado: {ex.Message}");
+                        }
+                        
+                        try
+                        {
+                            var comprobantes = envio.Data.Comprobantes;
+                            Console.WriteLine($"✓ Comprobantes: {comprobantes}");
+                            Console.WriteLine($"✓ Comprobantes != null: {comprobantes != null}");
+                            
+                            if (comprobantes != null)
+                            {
+                                Console.WriteLine($"✓ Comprobantes (tipo): {comprobantes.GetType().FullName}");
+                                
+                                var comprobantesList = comprobantes.Comprobante;
+                                Console.WriteLine($"✓ Comprobante (lista): {comprobantesList}");
+                                Console.WriteLine($"✓ Comprobante != null: {comprobantesList != null}");
+                                
+                                if (comprobantesList != null)
+                                {
+                                    Console.WriteLine($"✓ Comprobante (tipo): {comprobantesList.GetType().FullName}");
+                                    Console.WriteLine($"✓ Cantidad de comprobantes: {comprobantesList.Count}");
+                                    
+                                    for (int i = 0; i < comprobantesList.Count; i++)
+                                    {
+                                        var comp = comprobantesList[i];
+                                        Console.WriteLine($"--- COMPROBANTE [{i}] ---");
+                                        Console.WriteLine($"  Tipo: {comp.GetType().FullName}");
+                                        
+                                        try { Console.WriteLine($"  ClaveAcceso: {comp.ClaveAcceso}"); } catch { }
+                                        
+                                        try
+                                        {
+                                            var mensajes = comp.Mensajes;
+                                            Console.WriteLine($"  Mensajes: {mensajes}");
+                                            Console.WriteLine($"  Mensajes != null: {mensajes != null}");
+                                            
+                                            if (mensajes != null)
+                                            {
+                                                var mensajeList = mensajes.Mensaje;
+                                                Console.WriteLine($"  Mensaje (lista): {mensajeList}");
+                                                Console.WriteLine($"  Cantidad de mensajes: {mensajeList?.Count}");
+                                                
+                                                if (mensajeList != null)
+                                                {
+                                                    foreach (var msg in mensajeList)
+                                                    {
+                                                        Console.WriteLine($"    ► Mensaje:");
+                                                        Console.WriteLine($"      - Identificador: {msg.Identificador}");
+                                                        Console.WriteLine($"      - Tipo: {msg.Tipo}");
+                                                        Console.WriteLine($"      - Mensaje_: {msg.Mensaje_}");
+                                                        Console.WriteLine($"      - InformacionAdicional: {msg.InformacionAdicional}");
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        catch (Exception exMsg)
+                                        {
+                                            Console.WriteLine($"  ✗ Error al leer Mensajes: {exMsg.Message}");
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception exComp)
+                        {
+                            Console.WriteLine($"✗ Error al leer Comprobantes: {exComp.Message}");
+                            Console.WriteLine($"   StackTrace: {exComp.StackTrace}");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("⚠️ envio.Data ES NULL");
+                    }
+                    
+                    Console.WriteLine("========================================");
+                }
+                catch (Exception exEnvio)
+                {
+                    Console.WriteLine("========================================");
+                    Console.WriteLine("❌ EXCEPCIÓN AL ENVIAR AL SRI");
+                    Console.WriteLine("========================================");
+                    Console.WriteLine($"Mensaje: {exEnvio.Message}");
+                    Console.WriteLine($"Tipo: {exEnvio.GetType().FullName}");
+                    Console.WriteLine($"StackTrace: {exEnvio.StackTrace}");
+                    
+                    if (exEnvio.InnerException != null)
+                    {
+                        Console.WriteLine($"InnerException.Mensaje: {exEnvio.InnerException.Message}");
+                        Console.WriteLine($"InnerException.Tipo: {exEnvio.InnerException.GetType().FullName}");
+                        Console.WriteLine($"InnerException.StackTrace: {exEnvio.InnerException.StackTrace}");
+                    }
+                    
+                    Console.WriteLine("========================================");
+                    
+                    return BadRequest(new
+                    {
+                        success = false,
+                        error = "Error al conectar con el SRI",
+                        detalleError = exEnvio.Message,
+                        innerError = exEnvio.InnerException?.Message
+                    });
+                }
+
+                // ✅ VERIFICAR RESPUESTA DE ENVÍO
+                var estadoEnvio = envio.Data?.Estado?.ToString()?.ToUpper() ?? "";
+                Console.WriteLine($"🔍 Estado procesado para validación: '{estadoEnvio}'");
+                Console.WriteLine($"🔍 envio.Ok: {envio.Ok}");
+                
+                if (!envio.Ok || estadoEnvio == "DEVUELTA")
+                {
+                    Console.WriteLine("⚠️ Factura DEVUELTA o con errores");
+                    
+                    // Extraer mensajes de error
+                    var mensajesEnvio = new List<object>();
+                    
+                    dynamic primerComprobante = null;
+                    var comprobantes = envio.Data?.Comprobantes;
+                    
+                    if (comprobantes != null)
+                    {
+                        var comprobantesList = comprobantes.Comprobante;
+                        if (comprobantesList != null && comprobantesList.Count > 0)
+                        {
+                            primerComprobante = comprobantesList[0];
+                        }
+                    }
+                    
+                    if (primerComprobante?.Mensajes?.Mensaje != null)
+                    {
+                        foreach (var m in primerComprobante.Mensajes.Mensaje)
+                        {
+                            mensajesEnvio.Add(new 
+                            { 
+                                Identificador = m.Identificador, 
+                                Mensaje_ = m.Mensaje_, 
+                                Tipo = m.Tipo, 
+                                InformacionAdicional = m.InformacionAdicional 
+                            });
+                        }
+                    }
+
                     return Ok(new
                     {
                         success = false,
-                        estado = envio.Data?.Estado,
-                        error = envio.Error,
+                        estado = estadoEnvio,
+                        error = "Factura rechazada por el SRI",
                         mensajes = mensajesEnvio
                     });
                 }
 
+                // ========================================
+                // ✅ FACTURA RECIBIDA - CONSULTAR AUTORIZACIÓN
+                // ========================================
+                Console.WriteLine("✅ Factura RECIBIDA por el SRI");
+                Console.WriteLine("⏳ Esperando 7 segundos antes de consultar autorización...");
+                await Task.Delay(7000);
 
-                await Task.Delay(3000);
-
-                var auto = await _webService.AutorizacionComprobanteAsync(factura.InfoTributaria.ClaveAcceso);
-                var autorizacionData = auto.Data?.Autorizaciones?.Autorizacion?.FirstOrDefault();
-
-                if (!auto.Ok)
+                Console.WriteLine("========================================");
+                Console.WriteLine("🔄 CONSULTANDO AUTORIZACIÓN");
+                Console.WriteLine("========================================");
+                Console.WriteLine($"Clave de acceso: {factura.InfoTributaria.ClaveAcceso}");
+                
+                dynamic auto = null;
+                dynamic autorizacionData = null;
+                
+                try
                 {
-                    var mensajesAutorizacion = autorizacionData?.Mensajes?.Mensaje
-                        ?.Select(m => new { m.Identificador, m.Mensaje_, m.Tipo, m.InformacionAdicional })
-                        .ToList();
+                    auto = await _webService.AutorizacionComprobanteAsync(factura.InfoTributaria.ClaveAcceso);
+                    
+                    Console.WriteLine("========================================");
+                    Console.WriteLine("📥 RESPUESTA COMPLETA DEL SRI - AUTORIZACIÓN");
+                    Console.WriteLine("========================================");
+                    Console.WriteLine($"✓ auto != null: {auto != null}");
+                    Console.WriteLine($"✓ auto.Ok: {auto?.Ok}");
+                    Console.WriteLine($"✓ auto.Error: '{auto?.Error}'");
+                    Console.WriteLine($"✓ auto.Data != null: {auto?.Data != null}");
+                    
+                    if (auto?.Data != null)
+                    {
+                        Console.WriteLine($"✓ auto.Data.GetType(): {auto.Data.GetType().FullName}");
+                        
+                        // Intentar serializar a JSON
+                        try
+                        {
+                            var jsonAuto = Newtonsoft.Json.JsonConvert.SerializeObject(auto, Newtonsoft.Json.Formatting.Indented);
+                            Console.WriteLine("--- INICIO JSON COMPLETO DE AUTORIZACIÓN ---");
+                            Console.WriteLine(jsonAuto);
+                            Console.WriteLine("--- FIN JSON COMPLETO DE AUTORIZACIÓN ---");
+                        }
+                        catch (Exception exJson)
+                        {
+                            Console.WriteLine($"⚠️ No se pudo serializar a JSON: {exJson.Message}");
+                        }
+                        
+                        // Inspeccionar propiedades manualmente
+                        Console.WriteLine("--- PROPIEDADES DE auto.Data ---");
+                        try
+                        {
+                            var autorizaciones = auto.Data.Autorizaciones;
+                            Console.WriteLine($"✓ Autorizaciones: {autorizaciones}");
+                            Console.WriteLine($"✓ Autorizaciones != null: {autorizaciones != null}");
+                            
+                            if (autorizaciones != null)
+                            {
+                                Console.WriteLine($"✓ Autorizaciones (tipo): {autorizaciones.GetType().FullName}");
+                                
+                                var autorizacionList = autorizaciones.Autorizacion;
+                                Console.WriteLine($"✓ Autorizacion (lista): {autorizacionList}");
+                                Console.WriteLine($"✓ Autorizacion != null: {autorizacionList != null}");
+                                
+                                if (autorizacionList != null)
+                                {
+                                    Console.WriteLine($"✓ Autorizacion (tipo): {autorizacionList.GetType().FullName}");
+                                    Console.WriteLine($"✓ Cantidad de autorizaciones: {autorizacionList.Count}");
+                                    
+                                    for (int i = 0; i < autorizacionList.Count; i++)
+                                    {
+                                        var aut = autorizacionList[i];
+                                        Console.WriteLine($"--- AUTORIZACIÓN [{i}] ---");
+                                        Console.WriteLine($"  Tipo: {aut.GetType().FullName}");
+                                        
+                                        try { Console.WriteLine($"  Estado: {aut.Estado}"); } catch { }
+                                        try { Console.WriteLine($"  NumeroAutorizacion: {aut.NumeroAutorizacion}"); } catch { }
+                                        try { Console.WriteLine($"  FechaAutorizacion: {aut.FechaAutorizacion}"); } catch { }
+                                        try { Console.WriteLine($"  Ambiente: {aut.Ambiente}"); } catch { }
+                                        
+                                        try
+                                        {
+                                            var mensajes = aut.Mensajes;
+                                            Console.WriteLine($"  Mensajes: {mensajes}");
+                                            Console.WriteLine($"  Mensajes != null: {mensajes != null}");
+                                            
+                                            if (mensajes != null)
+                                            {
+                                                var mensajeList = mensajes.Mensaje;
+                                                Console.WriteLine($"  Mensaje (lista): {mensajeList}");
+                                                Console.WriteLine($"  Cantidad de mensajes: {mensajeList?.Count}");
+                                                
+                                                if (mensajeList != null)
+                                                {
+                                                    foreach (var msg in mensajeList)
+                                                    {
+                                                        Console.WriteLine($"    ► Mensaje:");
+                                                        Console.WriteLine($"      - Identificador: {msg.Identificador}");
+                                                        Console.WriteLine($"      - Tipo: {msg.Tipo}");
+                                                        Console.WriteLine($"      - Mensaje_: {msg.Mensaje_}");
+                                                        Console.WriteLine($"      - InformacionAdicional: {msg.InformacionAdicional}");
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        catch (Exception exMsg)
+                                        {
+                                            Console.WriteLine($"  ✗ Error al leer Mensajes: {exMsg.Message}");
+                                        }
+                                    }
+                                    
+                                    autorizacionData = autorizacionList[0];
+                                }
+                            }
+                        }
+                        catch (Exception exAut)
+                        {
+                            Console.WriteLine($"✗ Error al leer Autorizaciones: {exAut.Message}");
+                            Console.WriteLine($"   StackTrace: {exAut.StackTrace}");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("⚠️ auto.Data ES NULL");
+                    }
+                    
+                    Console.WriteLine("========================================");
+                }
+                catch (Exception exAuto)
+                {
+                    Console.WriteLine("========================================");
+                    Console.WriteLine("❌ EXCEPCIÓN AL CONSULTAR AUTORIZACIÓN");
+                    Console.WriteLine("========================================");
+                    Console.WriteLine($"Mensaje: {exAuto.Message}");
+                    Console.WriteLine($"Tipo: {exAuto.GetType().FullName}");
+                    Console.WriteLine($"StackTrace: {exAuto.StackTrace}");
+                    
+                    if (exAuto.InnerException != null)
+                    {
+                        Console.WriteLine($"InnerException.Mensaje: {exAuto.InnerException.Message}");
+                        Console.WriteLine($"InnerException.Tipo: {exAuto.InnerException.GetType().FullName}");
+                        Console.WriteLine($"InnerException.StackTrace: {exAuto.InnerException.StackTrace}");
+                    }
+                    
+                    Console.WriteLine("========================================");
+                    
+                    return BadRequest(new
+                    {
+                        success = false,
+                        error = "Error al consultar autorización en el SRI",
+                        detalleError = exAuto.Message,
+                        claveAcceso = factura.InfoTributaria.ClaveAcceso,
+                        mensaje = "La factura fue recibida pero no se pudo consultar su autorización. Intente consultarla manualmente con la clave de acceso."
+                    });
+                }
+
+                var estadoAutorizacion = autorizacionData?.Estado?.ToUpper() ?? "SIN_RESPUESTA";
+                Console.WriteLine($"🔍 Estado de autorización procesado: '{estadoAutorizacion}'");
+
+                // ✅ VERIFICAR ESTADO DE AUTORIZACIÓN
+                if (estadoAutorizacion != "AUTORIZADO")
+                {
+                    Console.WriteLine("⚠️ Factura NO AUTORIZADA");
+                    
+                    var mensajesAutorizacion = new List<object>();
+                    
+                    if (autorizacionData?.Mensajes?.Mensaje != null)
+                    {
+                        foreach (var m in autorizacionData.Mensajes.Mensaje)
+                        {
+                            mensajesAutorizacion.Add(new 
+                            { 
+                                Identificador = m.Identificador, 
+                                Mensaje_ = m.Mensaje_, 
+                                Tipo = m.Tipo, 
+                                InformacionAdicional = m.InformacionAdicional 
+                            });
+                        }
+                    }
 
                     return Ok(new
                     {
                         success = false,
-                        estado = autorizacionData?.Estado,
-                        mensajes = mensajesAutorizacion
+                        estado = estadoAutorizacion,
+                        mensajes = mensajesAutorizacion,
+                        claveAcceso = factura.InfoTributaria.ClaveAcceso,
+                        error = estadoAutorizacion == "SIN_RESPUESTA" 
+                            ? "La factura aún está en procesamiento. Consulte la autorización más tarde con la clave de acceso."
+                            : "Factura no autorizada por el SRI"
                     });
                 }
 
-                if (autorizacionData != null)
+                // ✅ FACTURA AUTORIZADA - GENERAR PDF
+                Console.WriteLine("✅ Factura AUTORIZADA");
+                
+                factura.Autorizacion.Numero = autorizacionData.NumeroAutorizacion;
+                
+                DateTimeOffset fechaOffset;
+                if (DateTimeOffset.TryParse(autorizacionData.FechaAutorizacion, out fechaOffset))
                 {
-                    factura.Autorizacion.Numero = autorizacionData.NumeroAutorizacion;
-                    if (DateTimeOffset.TryParse(autorizacionData.FechaAutorizacion, out var fechaOffset))
-                    {
-                        factura.Autorizacion.Fecha = fechaOffset.ToOffset(TimeSpan.FromHours(-5)).DateTime;
-                    }
-                    else
-                    {
-                        throw new Exception($"Fecha de autorización inválida: {autorizacionData.FechaAutorizacion}");
-                    }
-                }
-
-
-                var nombrePdf = $"FACTURA_{factura.InfoTributaria.ClaveAcceso}.pdf";
-                rutaPDF = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", nombrePdf);
-                _rideService.Factura_1_0_0(factura, rutaPDF);
-
-                FrappeUploadResult respuestaUploadPDF;
-                FrappeUploadResult respuestaUploadXML;
-
-                if (usandoCredencialesEmisor)
-                {
-                    respuestaUploadPDF = await _frappeUploader.UploadFileAsync(
-                        filePath: rutaPDF,
-                        fileName: Path.GetFileName(rutaPDF),
-                        apiKey: apiKey,
-                        apiSecret: apiSecret,
-                        folder: "Home/Facturacion/PDF"
-                    );
-
-                    respuestaUploadXML = await _frappeUploader.UploadFileAsync(
-                        filePath: rutaXmlLocal,
-                        fileName: nombreArchivoXml,
-                        apiKey: apiKey,
-                        apiSecret: apiSecret,
-                        folder: "Home/Facturacion/XML"
-                    );
+                    factura.Autorizacion.Fecha = fechaOffset.ToOffset(TimeSpan.FromHours(-5)).DateTime;
                 }
                 else
                 {
-                    respuestaUploadPDF = await _frappeUploader.UploadFileAsync(
-                        filePath: rutaPDF,
-                        fileName: Path.GetFileName(rutaPDF),
-                        folder: "Home/Facturacion/PDF"
-                    );
-
-                    respuestaUploadXML = await _frappeUploader.UploadFileAsync(
-                        filePath: rutaXmlLocal,
-                        fileName: nombreArchivoXml,
-                        folder: "Home/Facturacion/XML"
-                    );
+                    throw new Exception($"Fecha de autorización inválida: {autorizacionData.FechaAutorizacion}");
                 }
+                
+                Console.WriteLine($"✅ Número de autorización: {factura.Autorizacion.Numero}");
+                Console.WriteLine($"✅ Fecha de autorización: {factura.Autorizacion.Fecha}");
 
-                await LimpiarArchivosTemporales(rutaPDF, rutaXmlLocal, logoPath);
+                // Generar PDF
+                var nombrePdf = $"FACTURA_{factura.InfoTributaria.ClaveAcceso}.pdf";
+                rutaPDF = Path.Combine(tempDir, nombrePdf);
+                _rideService.Factura_1_0_0(factura, rutaPDF);
+
+                var pdfBase64 = Convert.ToBase64String(await System.IO.File.ReadAllBytesAsync(rutaPDF));
+                var xmlBase64 = Convert.ToBase64String(await System.IO.File.ReadAllBytesAsync(rutaXmlLocal));
 
                 return Ok(new
                 {
                     success = true,
                     claveAcceso = factura.InfoTributaria.ClaveAcceso,
-                    mensaje = "Factura autorizada, PDF generado y archivos subidos a Frappe correctamente",
+                    mensaje = "Factura autorizada y PDF generado correctamente",
                     numeroAutorizacion = factura.Autorizacion.Numero,
                     fechaAutorizacion = factura.Autorizacion.Fecha.ToString("yyyy-MM-dd HH:mm:ss"),
-                    respuestaFrappePDF = respuestaUploadPDF,
-                    respuestaFrappeXML = respuestaUploadXML,
-                    credencialesUsadas = usandoCredencialesEmisor ? "Emisor" : "Por defecto"
+                    pdfBase64 = pdfBase64,
+                    xmlBase64 = xmlBase64
                 });
             }
             catch (Exception ex)
             {
+                Console.WriteLine("========================================");
+                Console.WriteLine("❌ EXCEPCIÓN GENERAL");
+                Console.WriteLine("========================================");
+                Console.WriteLine($"Mensaje: {ex.Message}");
+                Console.WriteLine($"Tipo: {ex.GetType().FullName}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"InnerException.Mensaje: {ex.InnerException.Message}");
+                    Console.WriteLine($"InnerException.StackTrace: {ex.InnerException.StackTrace}");
+                }
+                
+                Console.WriteLine("========================================");
+                
                 return BadRequest(new
                 {
                     success = false,

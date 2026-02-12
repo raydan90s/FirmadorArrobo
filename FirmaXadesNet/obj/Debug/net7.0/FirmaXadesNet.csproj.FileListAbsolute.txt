@@ -25,3 +25,16 @@ C:\Users\Sistemas\Documents\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\FirmaXad
 C:\Users\Sistemas\Documents\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\refint\FirmaXadesNet.dll
 C:\Users\Sistemas\Documents\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\FirmaXadesNet.pdb
 C:\Users\Sistemas\Documents\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\ref\FirmaXadesNet.dll
+D:\GitHub\GeneradorPDF\FirmaXadesNet\bin\Debug\net7.0\FirmaXadesNet.deps.json
+D:\GitHub\GeneradorPDF\FirmaXadesNet\bin\Debug\net7.0\FirmaXadesNet.dll
+D:\GitHub\GeneradorPDF\FirmaXadesNet\bin\Debug\net7.0\FirmaXadesNet.pdb
+D:\GitHub\GeneradorPDF\FirmaXadesNet\bin\Debug\net7.0\Microsoft.Xades.dll
+D:\GitHub\GeneradorPDF\FirmaXadesNet\bin\Debug\net7.0\Microsoft.Xades.pdb
+D:\GitHub\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\FirmaXadesNet.csproj.AssemblyReference.cache
+D:\GitHub\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\FirmaXadesNet.GeneratedMSBuildEditorConfig.editorconfig
+D:\GitHub\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\FirmaXadesNet.csproj.CoreCompileInputs.cache
+D:\GitHub\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\FirmaXadesNet.csproj.CopyComplete
+D:\GitHub\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\FirmaXadesNet.dll
+D:\GitHub\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\refint\FirmaXadesNet.dll
+D:\GitHub\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\FirmaXadesNet.pdb
+D:\GitHub\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\ref\FirmaXadesNet.dll

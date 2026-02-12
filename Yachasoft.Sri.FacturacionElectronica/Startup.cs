@@ -14,12 +14,8 @@ namespace Yachasoft.Sri.FacturacionElectronica
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
-            
-            // 🔥 CONFIGURACIÓN TLS GLOBAL - Se ejecuta al iniciar la aplicación
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
             ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
-            
- 
         }
 
         public IConfiguration Configuration { get; }
@@ -37,13 +33,10 @@ namespace Yachasoft.Sri.FacturacionElectronica
                 });
             });
 
-            // Registro del cliente HTTP
             services.AddHttpClient();
 
-            // Configuración Frappe
             services.Configure<FrappeSettings>(Configuration.GetSection("Frappe"));
 
-            // ✅ Servicios Frappe con HttpClient
             services.AddHttpClient<FrappeLogoService>();
             services.AddHttpClient<FrappeCertificateService>();
             services.AddHttpClient<IFrappeCredentialsService, FrappeCredentialsService>();

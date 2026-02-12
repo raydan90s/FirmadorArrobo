@@ -9,13 +9,17 @@ namespace Yachasoft.Sri.FacturacionElectronica.Models.Request
         public EmisorRequest Emisor { get; set; }
         public int CodigoEstablecimiento { get; set; }
         public int CodigoPuntoEmision { get; set; }
-        public DateTime FechaEmision { get; set; }
+        public string FechaEmision { get; set; }
         public ClienteRequest Cliente { get; set; }
         public InfoFacturaRequest InfoFactura { get; set; }
         public List<DetalleRequest> Detalles { get; set; }
         public List<CampoAdicional> InfoAdicional { get; set; }
         public int Secuencial { get; set; }
         public string EnumTipoEmision { get; set; }
+
+        public string CertificadoP12Base64 { get; set; }
+        public string ContrasenaP12 { get; set; }
+        public string LogoBase64 { get; set; } 
     }
 
     public class InfoFacturaRequest

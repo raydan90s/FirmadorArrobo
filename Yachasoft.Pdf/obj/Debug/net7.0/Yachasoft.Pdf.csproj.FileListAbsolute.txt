@@ -23,3 +23,15 @@ C:\Users\Sistemas\Documents\GeneradorPDF\Yachasoft.Pdf\obj\Debug\net7.0\Yachasof
 C:\Users\Sistemas\Documents\GeneradorPDF\Yachasoft.Pdf\obj\Debug\net7.0\refint\Yachasoft.Pdf.dll
 C:\Users\Sistemas\Documents\GeneradorPDF\Yachasoft.Pdf\obj\Debug\net7.0\Yachasoft.Pdf.pdb
 C:\Users\Sistemas\Documents\GeneradorPDF\Yachasoft.Pdf\obj\Debug\net7.0\ref\Yachasoft.Pdf.dll
+D:\GitHub\GeneradorPDF\Yachasoft.Pdf\bin\Debug\net7.0\Yachasoft.Pdf.deps.json
+D:\GitHub\GeneradorPDF\Yachasoft.Pdf\bin\Debug\net7.0\Yachasoft.Pdf.dll
+D:\GitHub\GeneradorPDF\Yachasoft.Pdf\bin\Debug\net7.0\Yachasoft.Pdf.pdb
+D:\GitHub\GeneradorPDF\Yachasoft.Pdf\obj\Debug\net7.0\Yachasoft.Pdf.csproj.AssemblyReference.cache
+D:\GitHub\GeneradorPDF\Yachasoft.Pdf\obj\Debug\net7.0\Yachasoft.Pdf.GeneratedMSBuildEditorConfig.editorconfig
+D:\GitHub\GeneradorPDF\Yachasoft.Pdf\obj\Debug\net7.0\Yachasoft.Pdf.AssemblyInfoInputs.cache
+D:\GitHub\GeneradorPDF\Yachasoft.Pdf\obj\Debug\net7.0\Yachasoft.Pdf.AssemblyInfo.cs
+D:\GitHub\GeneradorPDF\Yachasoft.Pdf\obj\Debug\net7.0\Yachasoft.Pdf.csproj.CoreCompileInputs.cache
+D:\GitHub\GeneradorPDF\Yachasoft.Pdf\obj\Debug\net7.0\Yachasoft.Pdf.dll
+D:\GitHub\GeneradorPDF\Yachasoft.Pdf\obj\Debug\net7.0\refint\Yachasoft.Pdf.dll
+D:\GitHub\GeneradorPDF\Yachasoft.Pdf\obj\Debug\net7.0\Yachasoft.Pdf.pdb
+D:\GitHub\GeneradorPDF\Yachasoft.Pdf\obj\Debug\net7.0\ref\Yachasoft.Pdf.dll
