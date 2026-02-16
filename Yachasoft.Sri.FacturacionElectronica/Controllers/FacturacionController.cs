@@ -52,20 +52,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
         [HttpPost("GenerarFactura")]
         public async Task<IActionResult> GenerarFactura([FromBody] FacturaRequest request)
         {
-            Console.WriteLine("========================================");
-            Console.WriteLine("📥 DEBUG: JSON RECIBIDO (REQUEST)");
-            Console.WriteLine("========================================");
-            try
-            {
-                var jsonDebug = Newtonsoft.Json.JsonConvert.SerializeObject(request, Newtonsoft.Json.Formatting.Indented);
-                Console.WriteLine(jsonDebug);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"⚠️ No se pudo serializar el request para debug: {ex.Message}");
-            }
-            Console.WriteLine("========================================");
-
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
             ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
             ServicePointManager.DefaultConnectionLimit = 10;
@@ -261,6 +247,9 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     xmlDoc.Load(memoryStream);
                 }
 
+                // ---------------------------------------------------------
+                // 1. CORRECCIÓN DE FECHA (Código que ya tenías)
+                // ---------------------------------------------------------
                 var fechaNode = xmlDoc.SelectSingleNode("//fechaEmision");
                 if (fechaNode != null)
                 {
@@ -268,12 +257,65 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     fechaNode.InnerText = formato3;
                 }
 
+                // =========================================================
+                // 👇👇 2. INICIO DEL BLOQUE NUEVO: CORRECCIÓN DE DECIMALES 👇👇
+                // =========================================================
+                
+                // Definición de la función local (dentro del método)
+                void CorregirDecimales(XmlDocument doc, string xpath, string formato)
+                {
+                    var nodos = doc.SelectNodes(xpath);
+                    if (nodos == null) return;
+                    foreach (XmlNode nodo in nodos)
+                    {
+                        // Usamos CultureInfo.InvariantCulture para asegurar que el punto sea el separador
+                        if (decimal.TryParse(nodo.InnerText, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal valor))
+                        {
+                            nodo.InnerText = valor.ToString(formato, System.Globalization.CultureInfo.InvariantCulture);
+                        }
+                    }
+                }
+
+                // Aplicar corrección a campos de Totales (2 decimales fijos)
+                CorregirDecimales(xmlDoc, "//totalSinImpuestos", "F2");
+                CorregirDecimales(xmlDoc, "//totalDescuento", "F2");
+                CorregirDecimales(xmlDoc, "//baseImponible", "F2");
+                CorregirDecimales(xmlDoc, "//valor", "F2"); // Impuestos
+                CorregirDecimales(xmlDoc, "//importeTotal", "F2");
+                CorregirDecimales(xmlDoc, "//propina", "F2");
+                CorregirDecimales(xmlDoc, "//total", "F2"); // Total pagos
+
+                // Aplicar corrección a Detalles (Precios unitarios y totales)
+                CorregirDecimales(xmlDoc, "//precioUnitario", "F2");
+                CorregirDecimales(xmlDoc, "//precioTotalSinImpuesto", "F2");
+                CorregirDecimales(xmlDoc, "//descuento", "F2");
+                CorregirDecimales(xmlDoc, "//cantidad", "F2");
+
                 xmlDoc.DocumentElement.SetAttribute("id", "comprobante");
                 var xmlFirmado = _certificadoService.FirmarDocumento(xmlDoc);
 
                 var nombreArchivoXml = $"FACTURA_{factura.InfoTributaria.ClaveAcceso}.xml";
                 rutaXmlLocal = Path.Combine(tempDir, nombreArchivoXml);
                 xmlFirmado.Save(rutaXmlLocal);
+
+                // 👇👇 AGREGA ESTO AQUÍ 👇👇
+                Console.WriteLine("========================================");
+                Console.WriteLine("📄 XML GENERADO Y FIRMADO (PREVIO AL ENVÍO)");
+                Console.WriteLine("========================================");
+                
+                // Opción A: Imprimir en una sola línea (rápido)
+                // Console.WriteLine(xmlFirmado.OuterXml);
+
+                // Opción B: Imprimir con formato bonito (Recomendado para leer)
+                using (var stringWriter = new StringWriter())
+                using (var xmlTextWriter = new XmlTextWriter(stringWriter))
+                {
+                    xmlTextWriter.Formatting = Formatting.Indented;
+                    xmlFirmado.WriteTo(xmlTextWriter);
+                    Console.WriteLine(stringWriter.ToString());
+                }
+                Console.WriteLine("========================================");
+                // 👆👆 TERMINA EL BLOQUE AGREGADO 👆👆
 
                 // ========================================
                 // ✅ ENVÍO AL SRI CON LOGGING COMPLETO
