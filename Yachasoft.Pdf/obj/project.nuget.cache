@@ -1,14 +1,14 @@
 {
   "version": 2,
-  "dgSpecHash": "xAlRmcAMkQj/VIIRgR+EL9sYDe0klQyCi5XAIHFSrGF35SHxbBQhQTQIwh3TT25w4X+YeBcEf4ajPJSOtl64sQ==",
+  "dgSpecHash": "tuzG0NUbCfY=",
   "success": true,
-  "projectFilePath": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Pdf\\Yachasoft.Pdf.csproj",
+  "projectFilePath": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Pdf\\Yachasoft.Pdf.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\Raydan\\.nuget\\packages\\pdfsharpcore\\1.3.18\\pdfsharpcore.1.3.18.nupkg.sha512",
-    "C:\\Users\\Raydan\\.nuget\\packages\\sixlabors.fonts\\1.0.0-beta0013\\sixlabors.fonts.1.0.0-beta0013.nupkg.sha512",
-    "C:\\Users\\Raydan\\.nuget\\packages\\sixlabors.imagesharp\\1.0.4\\sixlabors.imagesharp.1.0.4.nupkg.sha512",
-    "C:\\Users\\Raydan\\.nuget\\packages\\system.numerics.vectors\\4.5.0\\system.numerics.vectors.4.5.0.nupkg.sha512",
-    "C:\\Users\\Raydan\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\4.7.0\\system.runtime.compilerservices.unsafe.4.7.0.nupkg.sha512"
+    "C:\\Users\\marsa\\.nuget\\packages\\pdfsharpcore\\1.3.18\\pdfsharpcore.1.3.18.nupkg.sha512",
+    "C:\\Users\\marsa\\.nuget\\packages\\sixlabors.fonts\\1.0.0-beta0013\\sixlabors.fonts.1.0.0-beta0013.nupkg.sha512",
+    "C:\\Users\\marsa\\.nuget\\packages\\sixlabors.imagesharp\\1.0.4\\sixlabors.imagesharp.1.0.4.nupkg.sha512",
+    "C:\\Users\\marsa\\.nuget\\packages\\system.numerics.vectors\\4.5.0\\system.numerics.vectors.4.5.0.nupkg.sha512",
+    "C:\\Users\\marsa\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\4.7.0\\system.runtime.compilerservices.unsafe.4.7.0.nupkg.sha512"
   ],
   "logs": []
 }

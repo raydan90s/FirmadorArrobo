@@ -16,7 +16,10 @@
       },
       "Yachasoft.Core/1.0.0": {
         "runtime": {
-          "Yachasoft.Core.dll": {}
+          "Yachasoft.Core.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
         }
       }
     }

@@ -32,3 +32,15 @@ D:\GitHub\GeneradorPDF\Yachasoft.Core\obj\Debug\net7.0\Yachasoft.Core.dll
 D:\GitHub\GeneradorPDF\Yachasoft.Core\obj\Debug\net7.0\refint\Yachasoft.Core.dll
 D:\GitHub\GeneradorPDF\Yachasoft.Core\obj\Debug\net7.0\Yachasoft.Core.pdb
 D:\GitHub\GeneradorPDF\Yachasoft.Core\obj\Debug\net7.0\ref\Yachasoft.Core.dll
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\Yachasoft.Core\bin\Debug\net7.0\Yachasoft.Core.deps.json
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\Yachasoft.Core\bin\Debug\net7.0\Yachasoft.Core.dll
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\Yachasoft.Core\bin\Debug\net7.0\Yachasoft.Core.pdb
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\Yachasoft.Core\obj\Debug\net7.0\Yachasoft.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\Yachasoft.Core\obj\Debug\net7.0\Yachasoft.Core.AssemblyInfoInputs.cache
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\Yachasoft.Core\obj\Debug\net7.0\Yachasoft.Core.AssemblyInfo.cs
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\Yachasoft.Core\obj\Debug\net7.0\Yachasoft.Core.csproj.CoreCompileInputs.cache
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\Yachasoft.Core\obj\Debug\net7.0\Yachasoft.Core.sourcelink.json
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\Yachasoft.Core\obj\Debug\net7.0\Yachasoft.Core.dll
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\Yachasoft.Core\obj\Debug\net7.0\refint\Yachasoft.Core.dll
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\Yachasoft.Core\obj\Debug\net7.0\Yachasoft.Core.pdb
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\Yachasoft.Core\obj\Debug\net7.0\ref\Yachasoft.Core.dll

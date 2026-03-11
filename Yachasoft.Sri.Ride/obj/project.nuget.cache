@@ -1,15 +1,15 @@
 {
   "version": 2,
-  "dgSpecHash": "wLeeH11OpBqk2tbWbbQmWx/2OziXJQxKegXTigdsWxuo/RBg1GB+5lE3ymWnckGNlPHXM+TX5J546zFT+eBsBQ==",
+  "dgSpecHash": "E08H/b2a+bs=",
   "success": true,
-  "projectFilePath": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Ride\\Yachasoft.Sri.Ride.csproj",
+  "projectFilePath": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Sri.Ride\\Yachasoft.Sri.Ride.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\Raydan\\.nuget\\packages\\pdfsharpcore\\1.3.18\\pdfsharpcore.1.3.18.nupkg.sha512",
-    "C:\\Users\\Raydan\\.nuget\\packages\\questpdf\\2025.4.0\\questpdf.2025.4.0.nupkg.sha512",
-    "C:\\Users\\Raydan\\.nuget\\packages\\sixlabors.fonts\\1.0.0-beta0013\\sixlabors.fonts.1.0.0-beta0013.nupkg.sha512",
-    "C:\\Users\\Raydan\\.nuget\\packages\\sixlabors.imagesharp\\1.0.4\\sixlabors.imagesharp.1.0.4.nupkg.sha512",
-    "C:\\Users\\Raydan\\.nuget\\packages\\system.numerics.vectors\\4.5.0\\system.numerics.vectors.4.5.0.nupkg.sha512",
-    "C:\\Users\\Raydan\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\4.7.0\\system.runtime.compilerservices.unsafe.4.7.0.nupkg.sha512"
+    "C:\\Users\\marsa\\.nuget\\packages\\pdfsharpcore\\1.3.18\\pdfsharpcore.1.3.18.nupkg.sha512",
+    "C:\\Users\\marsa\\.nuget\\packages\\questpdf\\2025.4.0\\questpdf.2025.4.0.nupkg.sha512",
+    "C:\\Users\\marsa\\.nuget\\packages\\sixlabors.fonts\\1.0.0-beta0013\\sixlabors.fonts.1.0.0-beta0013.nupkg.sha512",
+    "C:\\Users\\marsa\\.nuget\\packages\\sixlabors.imagesharp\\1.0.4\\sixlabors.imagesharp.1.0.4.nupkg.sha512",
+    "C:\\Users\\marsa\\.nuget\\packages\\system.numerics.vectors\\4.5.0\\system.numerics.vectors.4.5.0.nupkg.sha512",
+    "C:\\Users\\marsa\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\4.7.0\\system.runtime.compilerservices.unsafe.4.7.0.nupkg.sha512"
   ],
   "logs": []
 }

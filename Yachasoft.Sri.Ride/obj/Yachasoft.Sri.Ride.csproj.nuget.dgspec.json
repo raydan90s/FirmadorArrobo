@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Ride\\Yachasoft.Sri.Ride.csproj": {}
+    "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Sri.Ride\\Yachasoft.Sri.Ride.csproj": {}
   },
   "projects": {
-    "D:\\GitHub\\GeneradorPDF\\Yachasoft.Core\\Yachasoft.Core.csproj": {
+    "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Core\\Yachasoft.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Core\\Yachasoft.Core.csproj",
+        "projectUniqueName": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Core\\Yachasoft.Core.csproj",
         "projectName": "Yachasoft.Core",
-        "projectPath": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Core\\Yachasoft.Core.csproj",
-        "packagesPath": "C:\\Users\\Raydan\\.nuget\\packages\\",
-        "outputPath": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Core\\obj\\",
+        "projectPath": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Core\\Yachasoft.Core.csproj",
+        "packagesPath": "C:\\Users\\marsa\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Core\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Raydan\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\marsa\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net7.0"
@@ -32,7 +32,13 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net7.0": {
@@ -53,21 +59,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.410\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.100\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "D:\\GitHub\\GeneradorPDF\\Yachasoft.Pdf\\Yachasoft.Pdf.csproj": {
+    "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Pdf\\Yachasoft.Pdf.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Pdf\\Yachasoft.Pdf.csproj",
+        "projectUniqueName": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Pdf\\Yachasoft.Pdf.csproj",
         "projectName": "Yachasoft.Pdf",
-        "projectPath": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Pdf\\Yachasoft.Pdf.csproj",
-        "packagesPath": "C:\\Users\\Raydan\\.nuget\\packages\\",
-        "outputPath": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Pdf\\obj\\",
+        "projectPath": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Pdf\\Yachasoft.Pdf.csproj",
+        "packagesPath": "C:\\Users\\marsa\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Pdf\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Raydan\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\marsa\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net7.0"
@@ -85,7 +91,13 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net7.0": {
@@ -112,21 +124,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.410\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.100\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Core\\Yachasoft.Sri.Core.csproj": {
+    "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Sri.Core\\Yachasoft.Sri.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Core\\Yachasoft.Sri.Core.csproj",
+        "projectUniqueName": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Sri.Core\\Yachasoft.Sri.Core.csproj",
         "projectName": "Yachasoft.Sri.Core",
-        "projectPath": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Core\\Yachasoft.Sri.Core.csproj",
-        "packagesPath": "C:\\Users\\Raydan\\.nuget\\packages\\",
-        "outputPath": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Core\\obj\\",
+        "projectPath": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Sri.Core\\Yachasoft.Sri.Core.csproj",
+        "packagesPath": "C:\\Users\\marsa\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Sri.Core\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Raydan\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\marsa\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net7.0"
@@ -138,8 +150,8 @@
           "net7.0": {
             "targetAlias": "net7.0",
             "projectReferences": {
-              "D:\\GitHub\\GeneradorPDF\\Yachasoft.Core\\Yachasoft.Core.csproj": {
-                "projectPath": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Core\\Yachasoft.Core.csproj"
+              "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Core\\Yachasoft.Core.csproj": {
+                "projectPath": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Core\\Yachasoft.Core.csproj"
               }
             }
           }
@@ -148,7 +160,13 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net7.0": {
@@ -169,21 +187,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.410\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.100\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Modelos\\Yachasoft.Sri.Modelos.csproj": {
+    "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Sri.Modelos\\Yachasoft.Sri.Modelos.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Modelos\\Yachasoft.Sri.Modelos.csproj",
+        "projectUniqueName": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Sri.Modelos\\Yachasoft.Sri.Modelos.csproj",
         "projectName": "Yachasoft.Sri.Modelos",
-        "projectPath": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Modelos\\Yachasoft.Sri.Modelos.csproj",
-        "packagesPath": "C:\\Users\\Raydan\\.nuget\\packages\\",
-        "outputPath": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Modelos\\obj\\",
+        "projectPath": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Sri.Modelos\\Yachasoft.Sri.Modelos.csproj",
+        "packagesPath": "C:\\Users\\marsa\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Sri.Modelos\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Raydan\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\marsa\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net7.0"
@@ -195,8 +213,8 @@
           "net7.0": {
             "targetAlias": "net7.0",
             "projectReferences": {
-              "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Core\\Yachasoft.Sri.Core.csproj": {
-                "projectPath": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Core\\Yachasoft.Sri.Core.csproj"
+              "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Sri.Core\\Yachasoft.Sri.Core.csproj": {
+                "projectPath": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Sri.Core\\Yachasoft.Sri.Core.csproj"
               }
             }
           }
@@ -205,7 +223,13 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net7.0": {
@@ -226,21 +250,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.410\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.100\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Ride\\Yachasoft.Sri.Ride.csproj": {
+    "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Sri.Ride\\Yachasoft.Sri.Ride.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Ride\\Yachasoft.Sri.Ride.csproj",
+        "projectUniqueName": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Sri.Ride\\Yachasoft.Sri.Ride.csproj",
         "projectName": "Yachasoft.Sri.Ride",
-        "projectPath": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Ride\\Yachasoft.Sri.Ride.csproj",
-        "packagesPath": "C:\\Users\\Raydan\\.nuget\\packages\\",
-        "outputPath": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Ride\\obj\\",
+        "projectPath": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Sri.Ride\\Yachasoft.Sri.Ride.csproj",
+        "packagesPath": "C:\\Users\\marsa\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Sri.Ride\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Raydan\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\marsa\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net7.0"
@@ -252,11 +276,11 @@
           "net7.0": {
             "targetAlias": "net7.0",
             "projectReferences": {
-              "D:\\GitHub\\GeneradorPDF\\Yachasoft.Pdf\\Yachasoft.Pdf.csproj": {
-                "projectPath": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Pdf\\Yachasoft.Pdf.csproj"
+              "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Pdf\\Yachasoft.Pdf.csproj": {
+                "projectPath": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Pdf\\Yachasoft.Pdf.csproj"
               },
-              "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Modelos\\Yachasoft.Sri.Modelos.csproj": {
-                "projectPath": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Sri.Modelos\\Yachasoft.Sri.Modelos.csproj"
+              "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Sri.Modelos\\Yachasoft.Sri.Modelos.csproj": {
+                "projectPath": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Sri.Modelos\\Yachasoft.Sri.Modelos.csproj"
               }
             }
           }
@@ -265,7 +289,13 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net7.0": {
@@ -296,7 +326,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.410\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.100\\RuntimeIdentifierGraph.json"
         }
       }
     }

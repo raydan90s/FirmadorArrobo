@@ -14,11 +14,7 @@
           "Microsoft.Xades.dll": {}
         }
       },
-      "Microsoft.NETCore.Platforms/5.0.0-rc.2.20475.5": {},
       "Microsoft.Win32.SystemEvents/5.0.0-rc.2.20475.5": {
-        "dependencies": {
-          "Microsoft.NETCore.Platforms": "5.0.0-rc.2.20475.5"
-        },
         "runtime": {
           "lib/netstandard2.0/Microsoft.Win32.SystemEvents.dll": {
             "assemblyVersion": "5.0.0.0",
@@ -59,23 +55,7 @@
           }
         }
       },
-      "System.Formats.Asn1/5.0.0-rc.2.20475.5": {},
-      "System.Security.AccessControl/5.0.0-rc.2.20475.5": {
-        "dependencies": {
-          "Microsoft.NETCore.Platforms": "5.0.0-rc.2.20475.5",
-          "System.Security.Principal.Windows": "5.0.0-rc.2.20475.5"
-        }
-      },
-      "System.Security.Cryptography.Cng/5.0.0-rc.2.20475.5": {
-        "dependencies": {
-          "System.Formats.Asn1": "5.0.0-rc.2.20475.5"
-        }
-      },
       "System.Security.Cryptography.Pkcs/5.0.0-rc.2.20475.5": {
-        "dependencies": {
-          "System.Formats.Asn1": "5.0.0-rc.2.20475.5",
-          "System.Security.Cryptography.Cng": "5.0.0-rc.2.20475.5"
-        },
         "runtime": {
           "lib/netcoreapp3.0/System.Security.Cryptography.Pkcs.dll": {
             "assemblyVersion": "5.0.0.0",
@@ -105,7 +85,6 @@
       },
       "System.Security.Permissions/5.0.0-rc.2.20475.5": {
         "dependencies": {
-          "System.Security.AccessControl": "5.0.0-rc.2.20475.5",
           "System.Windows.Extensions": "5.0.0-rc.2.20475.5"
         },
         "runtime": {
@@ -115,7 +94,6 @@
           }
         }
       },
-      "System.Security.Principal.Windows/5.0.0-rc.2.20475.5": {},
       "System.Windows.Extensions/5.0.0-rc.2.20475.5": {
         "dependencies": {
           "System.Drawing.Common": "5.0.0-rc.2.20475.5"
@@ -143,13 +121,6 @@
       "serviceable": false,
       "sha512": ""
     },
-    "Microsoft.NETCore.Platforms/5.0.0-rc.2.20475.5": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-AKhVEYbvVKx5xiG76M5yIn8TzWWUMYuMaeyizohVvdyiwPa5OQwVjqwlzaKG8KDu3l6y96jWZbSCYZi54mJ63A==",
-      "path": "microsoft.netcore.platforms/5.0.0-rc.2.20475.5",
-      "hashPath": "microsoft.netcore.platforms.5.0.0-rc.2.20475.5.nupkg.sha512"
-    },
     "Microsoft.Win32.SystemEvents/5.0.0-rc.2.20475.5": {
       "type": "package",
       "serviceable": true,
@@ -163,27 +134,6 @@
       "sha512": "sha512-5RZPu5QvUviulcWusr1giGW4u9zch4LBwU8OeHccKkWMxm79JiqtLHqejxlJ1jwpYT7q2G9EsjAg86QBbSJMgg==",
       "path": "system.drawing.common/5.0.0-rc.2.20475.5",
       "hashPath": "system.drawing.common.5.0.0-rc.2.20475.5.nupkg.sha512"
-    },
-    "System.Formats.Asn1/5.0.0-rc.2.20475.5": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-QEP8AoYOz8zpFQO2Ypny/eLkeiM746QDNDzxYtwJE+GhxdK9lH8bT4hlhzk0RyHBUY8G5IUQ/92kEofDm6T/Kg==",
-      "path": "system.formats.asn1/5.0.0-rc.2.20475.5",
-      "hashPath": "system.formats.asn1.5.0.0-rc.2.20475.5.nupkg.sha512"
-    },
-    "System.Security.AccessControl/5.0.0-rc.2.20475.5": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-USxoVP7eacGBqRwy4twcY2Y80c+VM8vGhi23uASWKiTEfLK+XQH8vRcUQPwrmQR8M9fiAmFTl1cqcgDKkiLL9A==",
-      "path": "system.security.accesscontrol/5.0.0-rc.2.20475.5",
-      "hashPath": "system.security.accesscontrol.5.0.0-rc.2.20475.5.nupkg.sha512"
-    },
-    "System.Security.Cryptography.Cng/5.0.0-rc.2.20475.5": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-ODLD1rcNqG9GnGqpzgtkMZWkGdKaUCOsc+mqmXlWkWeZIb5JvECZx62WKM/ipuh4fZi2zY3qz+mBg+8FC5zlhg==",
-      "path": "system.security.cryptography.cng/5.0.0-rc.2.20475.5",
-      "hashPath": "system.security.cryptography.cng.5.0.0-rc.2.20475.5.nupkg.sha512"
     },
     "System.Security.Cryptography.Pkcs/5.0.0-rc.2.20475.5": {
       "type": "package",
@@ -205,13 +155,6 @@
       "sha512": "sha512-cxZbUWYjRgo1laZJljf4q3JzJfSaLYgyaZiw0lDjWnWQmCgX16U9qLqNFbzVlW9L4s96wGrlDdcMCQsn2rZevQ==",
       "path": "system.security.permissions/5.0.0-rc.2.20475.5",
       "hashPath": "system.security.permissions.5.0.0-rc.2.20475.5.nupkg.sha512"
-    },
-    "System.Security.Principal.Windows/5.0.0-rc.2.20475.5": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-tyo/DeVJmifCgct1NzdGCzyJKV4y1s7x37VG5105NfJeCyOqic9gwnpJn+4y9EJDghlsAdkDXbivCdATbMxadQ==",
-      "path": "system.security.principal.windows/5.0.0-rc.2.20475.5",
-      "hashPath": "system.security.principal.windows.5.0.0-rc.2.20475.5.nupkg.sha512"
     },
     "System.Windows.Extensions/5.0.0-rc.2.20475.5": {
       "type": "package",

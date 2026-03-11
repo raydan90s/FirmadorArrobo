@@ -817,19 +817,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Raydan\\.nuget\\packages\\": {}
+    "C:\\Users\\marsa\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\GitHub\\GeneradorPDF\\FirmaXadesNet\\FirmaXadesNet.csproj",
+      "projectUniqueName": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\FirmaXadesNet\\FirmaXadesNet.csproj",
       "projectName": "FirmaXadesNet",
-      "projectPath": "D:\\GitHub\\GeneradorPDF\\FirmaXadesNet\\FirmaXadesNet.csproj",
-      "packagesPath": "C:\\Users\\Raydan\\.nuget\\packages\\",
-      "outputPath": "D:\\GitHub\\GeneradorPDF\\FirmaXadesNet\\obj\\",
+      "projectPath": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\FirmaXadesNet\\FirmaXadesNet.csproj",
+      "packagesPath": "C:\\Users\\marsa\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\FirmaXadesNet\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Raydan\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\marsa\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net7.0"
@@ -841,8 +841,8 @@
         "net7.0": {
           "targetAlias": "net7.0",
           "projectReferences": {
-            "D:\\GitHub\\GeneradorPDF\\Microsoft.Xades\\Microsoft.Xades.csproj": {
-              "projectPath": "D:\\GitHub\\GeneradorPDF\\Microsoft.Xades\\Microsoft.Xades.csproj"
+            "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Microsoft.Xades\\Microsoft.Xades.csproj": {
+              "projectPath": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Microsoft.Xades\\Microsoft.Xades.csproj"
             }
           }
         }
@@ -851,7 +851,13 @@
         "warnAsError": [
           "NU1605"
         ]
-      }
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "10.0.100"
     },
     "frameworks": {
       "net7.0": {
@@ -890,7 +896,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.410\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.100\\RuntimeIdentifierGraph.json"
       }
     }
   }

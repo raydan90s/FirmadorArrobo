@@ -8,19 +8,19 @@
     "net7.0": []
   },
   "packageFolders": {
-    "C:\\Users\\Raydan\\.nuget\\packages\\": {}
+    "C:\\Users\\marsa\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Core\\Yachasoft.Core.csproj",
+      "projectUniqueName": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Core\\Yachasoft.Core.csproj",
       "projectName": "Yachasoft.Core",
-      "projectPath": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Core\\Yachasoft.Core.csproj",
-      "packagesPath": "C:\\Users\\Raydan\\.nuget\\packages\\",
-      "outputPath": "D:\\GitHub\\GeneradorPDF\\Yachasoft.Core\\obj\\",
+      "projectPath": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Core\\Yachasoft.Core.csproj",
+      "packagesPath": "C:\\Users\\marsa\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\marsa\\OneDrive\\Escritorio\\FirmadorArrobo\\Yachasoft.Core\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Raydan\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\marsa\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net7.0"
@@ -38,7 +38,13 @@
         "warnAsError": [
           "NU1605"
         ]
-      }
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "10.0.100"
     },
     "frameworks": {
       "net7.0": {
@@ -59,7 +65,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.410\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.100\\RuntimeIdentifierGraph.json"
       }
     }
   }

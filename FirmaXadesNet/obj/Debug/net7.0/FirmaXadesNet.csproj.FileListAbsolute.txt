@@ -38,3 +38,17 @@ D:\GitHub\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\FirmaXadesNet.dll
 D:\GitHub\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\refint\FirmaXadesNet.dll
 D:\GitHub\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\FirmaXadesNet.pdb
 D:\GitHub\GeneradorPDF\FirmaXadesNet\obj\Debug\net7.0\ref\FirmaXadesNet.dll
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\FirmaXadesNet\bin\Debug\net7.0\FirmaXadesNet.deps.json
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\FirmaXadesNet\bin\Debug\net7.0\FirmaXadesNet.dll
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\FirmaXadesNet\bin\Debug\net7.0\FirmaXadesNet.pdb
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\FirmaXadesNet\bin\Debug\net7.0\Microsoft.Xades.dll
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\FirmaXadesNet\bin\Debug\net7.0\Microsoft.Xades.pdb
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\FirmaXadesNet\obj\Debug\net7.0\FirmaXadesNet.csproj.AssemblyReference.cache
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\FirmaXadesNet\obj\Debug\net7.0\FirmaXadesNet.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\FirmaXadesNet\obj\Debug\net7.0\FirmaXadesNet.csproj.CoreCompileInputs.cache
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\FirmaXadesNet\obj\Debug\net7.0\FirmaXadesNet.sourcelink.json
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\FirmaXadesNet\obj\Debug\net7.0\FirmaXad.7D7D4F82.Up2Date
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\FirmaXadesNet\obj\Debug\net7.0\FirmaXadesNet.dll
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\FirmaXadesNet\obj\Debug\net7.0\refint\FirmaXadesNet.dll
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\FirmaXadesNet\obj\Debug\net7.0\FirmaXadesNet.pdb
+C:\Users\marsa\OneDrive\Escritorio\FirmadorArrobo\FirmaXadesNet\obj\Debug\net7.0\ref\FirmaXadesNet.dll
