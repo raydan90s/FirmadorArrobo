@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Xml;
 using System.Threading.Tasks;
-using System.Net;
+
 using Yachasoft.Sri.Core.Enumerados;
 using Yachasoft.Sri.Core.Atributos;
 using Yachasoft.Sri.Modelos;
@@ -15,6 +15,7 @@ using Yachasoft.Sri.Xsd;
 using Yachasoft.Sri.Xsd.Map;
 using Yachasoft.Sri.FacturacionElectronica.Models.Request;
 using Yachasoft.Core.Extensions;
+using Yachasoft.Sri.FacturacionElectronica.Helper;
 using Yachasoft.Sri.FacturacionElectronica.Services;
 using System.IO;
 
@@ -31,14 +32,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
         private readonly FrappeCertificateService _frappeCertService;
         private readonly FrappeLogoService _frappeLogoService;
         private readonly IFrappeCredentialsService _frappeCredentialsService;
-
-        static RetencionController()
-        {
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
-            ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
-            ServicePointManager.DefaultConnectionLimit = 100;
-            ServicePointManager.Expect100Continue = false;
-        }
 
         public RetencionController(
             Signer.ICertificadoService certificadoService,
@@ -67,9 +60,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
         [HttpPost("GenerarRetencion")]
         public async Task<IActionResult> GenerarRetencion([FromBody] RetencionRequest request)
         {
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
-            ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
-
             string logoPath = null;
             string rutaPDF = null;
             string rutaXmlLocal = null;
@@ -272,9 +262,8 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     });
                 }
 
-                await Task.Delay(3000);
-
-                var auto = await _webService.AutorizacionComprobanteAsync(retencion.InfoTributaria.ClaveAcceso);
+                var auto = await SriAutorizacionHelper.ConsultarAutorizacionConReintentosAsync(
+                    _webService, retencion.InfoTributaria.ClaveAcceso);
                 var autorizacionData = auto.Data?.Autorizaciones?.Autorizacion?.FirstOrDefault();
 
                 if (!auto.Ok)

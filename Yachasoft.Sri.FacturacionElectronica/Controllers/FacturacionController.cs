@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
+
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
@@ -15,6 +15,7 @@ using Yachasoft.Sri.Xsd;
 using Yachasoft.Sri.Xsd.Contratos.Factura_1_0_0;
 using Yachasoft.Sri.Xsd.Map;
 using Yachasoft.Sri.FacturacionElectronica.Models.Request;
+using Yachasoft.Sri.FacturacionElectronica.Helper;
 using Yachasoft.Sri.FacturacionElectronica.Services;
 
 namespace Yachasoft.Sri.FacturacionElectronica.Controllers
@@ -52,11 +53,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
         [HttpPost("GenerarFactura")]
         public async Task<IActionResult> GenerarFactura([FromBody] FacturaRequest request)
         {
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
-            ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
-            ServicePointManager.DefaultConnectionLimit = 10;
-            ServicePointManager.Expect100Continue = false;
-
             string logoPath = null;
             string rutaPDF = null;
             string rutaXmlLocal = null;
@@ -514,189 +510,24 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     });
                 }
 
-                // ========================================
-                // ✅ FACTURA RECIBIDA - CONSULTAR AUTORIZACIÓN
-                // ========================================
-                Console.WriteLine("✅ Factura RECIBIDA por el SRI");
-                Console.WriteLine("⏳ Esperando 7 segundos antes de consultar autorización...");
-                await Task.Delay(7000);
+                // Consultar autorización con reintentos
+                var auto = await SriAutorizacionHelper.ConsultarAutorizacionConReintentosAsync(
+                    _webService, factura.InfoTributaria.ClaveAcceso);
+                var autorizacionData = auto.Data?.Autorizaciones?.Autorizacion?.FirstOrDefault();
 
-                Console.WriteLine("========================================");
-                Console.WriteLine("🔄 CONSULTANDO AUTORIZACIÓN");
-                Console.WriteLine("========================================");
-                Console.WriteLine($"Clave de acceso: {factura.InfoTributaria.ClaveAcceso}");
-                
-                dynamic auto = null;
-                dynamic autorizacionData = null;
-                
-                try
+                if (!auto.Ok)
                 {
-                    auto = await _webService.AutorizacionComprobanteAsync(factura.InfoTributaria.ClaveAcceso);
-                    
-                    Console.WriteLine("========================================");
-                    Console.WriteLine("📥 RESPUESTA COMPLETA DEL SRI - AUTORIZACIÓN");
-                    Console.WriteLine("========================================");
-                    Console.WriteLine($"✓ auto != null: {auto != null}");
-                    Console.WriteLine($"✓ auto.Ok: {auto?.Ok}");
-                    Console.WriteLine($"✓ auto.Error: '{auto?.Error}'");
-                    Console.WriteLine($"✓ auto.Data != null: {auto?.Data != null}");
-                    
-                    if (auto?.Data != null)
-                    {
-                        Console.WriteLine($"✓ auto.Data.GetType(): {auto.Data.GetType().FullName}");
-                        
-                        // Intentar serializar a JSON
-                        try
-                        {
-                            var jsonAuto = Newtonsoft.Json.JsonConvert.SerializeObject(auto, Newtonsoft.Json.Formatting.Indented);
-                            Console.WriteLine("--- INICIO JSON COMPLETO DE AUTORIZACIÓN ---");
-                            Console.WriteLine(jsonAuto);
-                            Console.WriteLine("--- FIN JSON COMPLETO DE AUTORIZACIÓN ---");
-                        }
-                        catch (Exception exJson)
-                        {
-                            Console.WriteLine($"⚠️ No se pudo serializar a JSON: {exJson.Message}");
-                        }
-                        
-                        // Inspeccionar propiedades manualmente
-                        Console.WriteLine("--- PROPIEDADES DE auto.Data ---");
-                        try
-                        {
-                            var autorizaciones = auto.Data.Autorizaciones;
-                            Console.WriteLine($"✓ Autorizaciones: {autorizaciones}");
-                            Console.WriteLine($"✓ Autorizaciones != null: {autorizaciones != null}");
-                            
-                            if (autorizaciones != null)
-                            {
-                                Console.WriteLine($"✓ Autorizaciones (tipo): {autorizaciones.GetType().FullName}");
-                                
-                                var autorizacionList = autorizaciones.Autorizacion;
-                                Console.WriteLine($"✓ Autorizacion (lista): {autorizacionList}");
-                                Console.WriteLine($"✓ Autorizacion != null: {autorizacionList != null}");
-                                
-                                if (autorizacionList != null)
-                                {
-                                    Console.WriteLine($"✓ Autorizacion (tipo): {autorizacionList.GetType().FullName}");
-                                    Console.WriteLine($"✓ Cantidad de autorizaciones: {autorizacionList.Count}");
-                                    
-                                    for (int i = 0; i < autorizacionList.Count; i++)
-                                    {
-                                        var aut = autorizacionList[i];
-                                        Console.WriteLine($"--- AUTORIZACIÓN [{i}] ---");
-                                        Console.WriteLine($"  Tipo: {aut.GetType().FullName}");
-                                        
-                                        try { Console.WriteLine($"  Estado: {aut.Estado}"); } catch { }
-                                        try { Console.WriteLine($"  NumeroAutorizacion: {aut.NumeroAutorizacion}"); } catch { }
-                                        try { Console.WriteLine($"  FechaAutorizacion: {aut.FechaAutorizacion}"); } catch { }
-                                        try { Console.WriteLine($"  Ambiente: {aut.Ambiente}"); } catch { }
-                                        
-                                        try
-                                        {
-                                            var mensajes = aut.Mensajes;
-                                            Console.WriteLine($"  Mensajes: {mensajes}");
-                                            Console.WriteLine($"  Mensajes != null: {mensajes != null}");
-                                            
-                                            if (mensajes != null)
-                                            {
-                                                var mensajeList = mensajes.Mensaje;
-                                                Console.WriteLine($"  Mensaje (lista): {mensajeList}");
-                                                Console.WriteLine($"  Cantidad de mensajes: {mensajeList?.Count}");
-                                                
-                                                if (mensajeList != null)
-                                                {
-                                                    foreach (var msg in mensajeList)
-                                                    {
-                                                        Console.WriteLine($"    ► Mensaje:");
-                                                        Console.WriteLine($"      - Identificador: {msg.Identificador}");
-                                                        Console.WriteLine($"      - Tipo: {msg.Tipo}");
-                                                        Console.WriteLine($"      - Mensaje_: {msg.Mensaje_}");
-                                                        Console.WriteLine($"      - InformacionAdicional: {msg.InformacionAdicional}");
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        catch (Exception exMsg)
-                                        {
-                                            Console.WriteLine($"  ✗ Error al leer Mensajes: {exMsg.Message}");
-                                        }
-                                    }
-                                    
-                                    autorizacionData = autorizacionList[0];
-                                }
-                            }
-                        }
-                        catch (Exception exAut)
-                        {
-                            Console.WriteLine($"✗ Error al leer Autorizaciones: {exAut.Message}");
-                            Console.WriteLine($"   StackTrace: {exAut.StackTrace}");
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("⚠️ auto.Data ES NULL");
-                    }
-                    
-                    Console.WriteLine("========================================");
-                }
-                catch (Exception exAuto)
-                {
-                    Console.WriteLine("========================================");
-                    Console.WriteLine("❌ EXCEPCIÓN AL CONSULTAR AUTORIZACIÓN");
-                    Console.WriteLine("========================================");
-                    Console.WriteLine($"Mensaje: {exAuto.Message}");
-                    Console.WriteLine($"Tipo: {exAuto.GetType().FullName}");
-                    Console.WriteLine($"StackTrace: {exAuto.StackTrace}");
-                    
-                    if (exAuto.InnerException != null)
-                    {
-                        Console.WriteLine($"InnerException.Mensaje: {exAuto.InnerException.Message}");
-                        Console.WriteLine($"InnerException.Tipo: {exAuto.InnerException.GetType().FullName}");
-                        Console.WriteLine($"InnerException.StackTrace: {exAuto.InnerException.StackTrace}");
-                    }
-                    
-                    Console.WriteLine("========================================");
-                    
-                    return BadRequest(new
-                    {
-                        success = false,
-                        error = "Error al consultar autorización en el SRI",
-                        detalleError = exAuto.Message,
-                        claveAcceso = factura.InfoTributaria.ClaveAcceso,
-                        mensaje = "La factura fue recibida pero no se pudo consultar su autorización. Intente consultarla manualmente con la clave de acceso."
-                    });
-                }
-
-                var estadoAutorizacion = autorizacionData?.Estado?.ToUpper() ?? "SIN_RESPUESTA";
-                Console.WriteLine($"🔍 Estado de autorización procesado: '{estadoAutorizacion}'");
-
-                // ✅ VERIFICAR ESTADO DE AUTORIZACIÓN
-                if (estadoAutorizacion != "AUTORIZADO")
-                {
-                    Console.WriteLine("⚠️ Factura NO AUTORIZADA");
-                    
-                    var mensajesAutorizacion = new List<object>();
-                    
-                    if (autorizacionData?.Mensajes?.Mensaje != null)
-                    {
-                        foreach (var m in autorizacionData.Mensajes.Mensaje)
-                        {
-                            mensajesAutorizacion.Add(new 
-                            { 
-                                Identificador = m.Identificador, 
-                                Mensaje_ = m.Mensaje_, 
-                                Tipo = m.Tipo, 
-                                InformacionAdicional = m.InformacionAdicional 
-                            });
-                        }
-                    }
+                    var mensajesAutorizacion = autorizacionData?.Mensajes?.Mensaje
+                        ?.Select(m => new { m.Identificador, m.Mensaje_, m.Tipo, m.InformacionAdicional })
+                        .ToList();
 
                     return Ok(new
                     {
                         success = false,
-                        estado = estadoAutorizacion,
+                        estado = autorizacionData?.Estado ?? "SIN_RESPUESTA",
                         mensajes = mensajesAutorizacion,
                         claveAcceso = factura.InfoTributaria.ClaveAcceso,
-                        error = estadoAutorizacion == "SIN_RESPUESTA" 
+                        error = autorizacionData?.Estado == null
                             ? "La factura aún está en procesamiento. Consulte la autorización más tarde con la clave de acceso."
                             : "Factura no autorizada por el SRI"
                     });

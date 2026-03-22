@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
+
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
@@ -15,6 +15,7 @@ using Yachasoft.Sri.Xsd;
 using Yachasoft.Sri.Xsd.Contratos.NotaDebito_1_0_0;
 using Yachasoft.Sri.Xsd.Map;
 using Yachasoft.Sri.FacturacionElectronica.Models.Request;
+using Yachasoft.Sri.FacturacionElectronica.Helper;
 using Yachasoft.Sri.FacturacionElectronica.Services;
 
 namespace Yachasoft.Sri.FacturacionElectronica.Controllers
@@ -30,14 +31,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
         private readonly FrappeCertificateService _frappeCertService;
         private readonly FrappeLogoService _frappeLogoService;
         private readonly IFrappeCredentialsService _frappeCredentialsService;
-
-        static NotaDebitoController()
-        {
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
-            ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
-            ServicePointManager.DefaultConnectionLimit = 100;
-            ServicePointManager.Expect100Continue = false;
-        }
 
         public NotaDebitoController(
             Signer.ICertificadoService certificadoService,
@@ -66,9 +59,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
         [HttpPost("GenerarNotaDebito")]
         public async Task<IActionResult> GenerarNotaDebito([FromBody] NotaDebitoRequest request)
         {
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
-            ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
-
             string logoPath = null;
             string rutaPDF = null;
             string rutaXmlLocal = null;
@@ -301,9 +291,8 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     });
                 }
 
-                await Task.Delay(3000);
-
-                var auto = await _webService.AutorizacionComprobanteAsync(notaDebito.InfoTributaria.ClaveAcceso);
+                var auto = await SriAutorizacionHelper.ConsultarAutorizacionConReintentosAsync(
+                    _webService, notaDebito.InfoTributaria.ClaveAcceso);
                 var autorizacionData = auto.Data?.Autorizaciones?.Autorizacion?.FirstOrDefault();
 
                 if (!auto.Ok)

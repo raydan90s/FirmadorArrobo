@@ -16,6 +16,8 @@ namespace Yachasoft.Sri.FacturacionElectronica
             Configuration = configuration;
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
             ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+            ServicePointManager.DefaultConnectionLimit = 100;
+            ServicePointManager.Expect100Continue = false;
         }
 
         public IConfiguration Configuration { get; }
