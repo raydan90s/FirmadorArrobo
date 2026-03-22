@@ -181,7 +181,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 if (logoResult.Success && !string.IsNullOrWhiteSpace(logoResult.LogoBase64))
                 {
                     var logoFileName = $"logo_{request.Emisor.RUC}_{DateTime.Now:yyyyMMddHHmmss}.png";
-                    logoPath = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", logoFileName);
+                    logoPath = Path.Combine(Path.GetTempPath(), logoFileName);
 
                     var logoBytes = Convert.FromBase64String(logoResult.LogoBase64);
                     await System.IO.File.WriteAllBytesAsync(logoPath, logoBytes);
@@ -273,7 +273,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 var xmlFirmado = _certificadoService.FirmarDocumento(xmlDoc);
 
                 var nombreArchivoXml = $"LIQUIDACION_COMPRA_{liquidacion.InfoTributaria.ClaveAcceso}.xml";
-                rutaXmlLocal = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", nombreArchivoXml);
+                rutaXmlLocal = Path.Combine(Path.GetTempPath(), nombreArchivoXml);
                 xmlFirmado.Save(rutaXmlLocal);
 
                 var envio = await _webService.ValidarComprobanteAsync(xmlFirmado);
@@ -327,7 +327,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 }
 
                 var nombrePdf = $"LIQUIDACION_COMPRA_{liquidacion.InfoTributaria.ClaveAcceso}.pdf";
-                rutaPDF = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", nombrePdf);
+                rutaPDF = Path.Combine(Path.GetTempPath(), nombrePdf);
                 _rideService.LiquidacionCompra_1_0_0(liquidacion, rutaPDF);
 
                 FrappeUploadResult respuestaUploadPDF;
