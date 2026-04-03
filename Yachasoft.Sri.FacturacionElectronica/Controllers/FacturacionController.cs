@@ -179,7 +179,12 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 var detallesMapeados = MapperHelper.MapearDetallesConSubsidio(request.Detalles);
 
                 DateTime fechaEmision;
-                if (!DateTime.TryParse(request.FechaEmision, out fechaEmision))
+                if (DateTimeOffset.TryParse(request.FechaEmision, out var dto))
+                {
+                    // Usar la fecha/hora local del emisor (respeta el offset -05:00)
+                    fechaEmision = dto.DateTime;
+                }
+                else if (!DateTime.TryParse(request.FechaEmision, out fechaEmision))
                 {
                     fechaEmision = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
                         DateTime.UtcNow,
