@@ -46,12 +46,18 @@ namespace Yachasoft.Sri.WebService
             {
                 var soapEnvelopeXml = new XmlDocument();
                 soapEnvelopeXml.LoadXml(RequestHelper.GetRequestStream("ValidarComprobanteRequest.xml").ToXmlDocument().OuterXml.Replace("{xmlParameter}", EncodeStringToBase64(xmlFirmado)));
-                HttpWebRequest webRequest = CreateWebRequest(this.GenerateUrlValidarComprobante(), "");
-                InsertSoapEnvelopeIntoWebRequest(soapEnvelopeXml, webRequest);
-                using WebResponse responseAsync = await webRequest.GetResponseAsync();
-                using var streamReader = new StreamReader(responseAsync.GetResponseStream());
+
+                string responseXml = await ConReintentosAsync(async () =>
+                {
+                    HttpWebRequest webRequest = CreateWebRequest(this.GenerateUrlValidarComprobante(), "");
+                    InsertSoapEnvelopeIntoWebRequest(soapEnvelopeXml, webRequest);
+                    using WebResponse responseAsync = await webRequest.GetResponseAsync();
+                    using var streamReader = new StreamReader(responseAsync.GetResponseStream());
+                    return streamReader.ReadToEnd();
+                });
+
                 var xmlDocument2 = new XmlDocument();
-                xmlDocument2.LoadXml(streamReader.ReadToEnd());
+                xmlDocument2.LoadXml(responseXml);
                 XmlNode firstChild = xmlDocument2.FirstChild;
                 while (firstChild != null && !string.Equals(firstChild.Name, "RespuestaRecepcionComprobante", StringComparison.InvariantCultureIgnoreCase))
                     firstChild = firstChild.FirstChild;
@@ -98,12 +104,18 @@ namespace Yachasoft.Sri.WebService
             {
                 var soapEnvelopeXml = new XmlDocument();
                 soapEnvelopeXml.LoadXml(RequestHelper.GetRequestStream("AutorizacionComprobanteRequest.xml").ToXmlDocument().OuterXml.Replace("{claveAccesoParameter}", claveAcceso));
-                HttpWebRequest webRequest = CreateWebRequest(this.GenerateUrlAutorizacionComprobante(), "");
-                InsertSoapEnvelopeIntoWebRequest(soapEnvelopeXml, webRequest);
-                using WebResponse responseAsync = await webRequest.GetResponseAsync();
-                using var streamReader = new StreamReader(responseAsync.GetResponseStream());
+
+                string responseXml = await ConReintentosAsync(async () =>
+                {
+                    HttpWebRequest webRequest = CreateWebRequest(this.GenerateUrlAutorizacionComprobante(), "");
+                    InsertSoapEnvelopeIntoWebRequest(soapEnvelopeXml, webRequest);
+                    using WebResponse responseAsync = await webRequest.GetResponseAsync();
+                    using var streamReader = new StreamReader(responseAsync.GetResponseStream());
+                    return streamReader.ReadToEnd();
+                });
+
                 var xmlDocument2 = new XmlDocument();
-                xmlDocument2.LoadXml(streamReader.ReadToEnd());
+                xmlDocument2.LoadXml(responseXml);
                 XmlNode firstChild = xmlDocument2.FirstChild;
                 while (firstChild != null && !string.Equals(firstChild.Name, "RespuestaAutorizacionComprobante", StringComparison.InvariantCultureIgnoreCase))
                     firstChild = firstChild.FirstChild;
@@ -129,6 +141,8 @@ namespace Yachasoft.Sri.WebService
             httpWebRequest.Accept = "text/xml";
             httpWebRequest.Method = "POST";
             httpWebRequest.Headers.Add("SOAPAction", action);
+            httpWebRequest.Timeout = 30000;
+            httpWebRequest.ReadWriteTimeout = 30000;
             return httpWebRequest;
         }
 
@@ -141,5 +155,21 @@ namespace Yachasoft.Sri.WebService
         private string GenerateRootUrl() => $"https://{(this.TipoAmbiente == EnumTipoAmbiente.Prueba ? "celcer.sri.gob.ec" : "cel.sri.gob.ec")}";
 
         internal static string EncodeStringToBase64(string plainTextBytes) => Convert.ToBase64String(Encoding.UTF8.GetBytes(plainTextBytes));
+
+        private static async Task<T> ConReintentosAsync<T>(Func<Task<T>> operacion, int maxIntentos = 3)
+        {
+            for (int intento = 1; intento < maxIntentos; intento++)
+            {
+                try
+                {
+                    return await operacion();
+                }
+                catch (WebException)
+                {
+                    await Task.Delay(intento * 1000);
+                }
+            }
+            return await operacion();
+        }
     }
 }

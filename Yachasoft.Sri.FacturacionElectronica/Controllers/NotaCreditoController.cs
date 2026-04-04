@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
+
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
@@ -15,6 +15,7 @@ using Yachasoft.Sri.Xsd;
 using Yachasoft.Sri.Xsd.Contratos.NotaCredito_1_0_0;
 using Yachasoft.Sri.Xsd.Map;
 using Yachasoft.Sri.FacturacionElectronica.Models.Request;
+using Yachasoft.Sri.FacturacionElectronica.Helper;
 using Yachasoft.Sri.FacturacionElectronica.Services;
 
 namespace Yachasoft.Sri.FacturacionElectronica.Controllers
@@ -30,14 +31,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
         private readonly FrappeCertificateService _frappeCertService;
         private readonly FrappeLogoService _frappeLogoService;
         private readonly IFrappeCredentialsService _frappeCredentialsService;
-        static NotaCreditoController()
-        {
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
-            ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
-            ServicePointManager.DefaultConnectionLimit = 100;
-            ServicePointManager.Expect100Continue = false;
-        }
-
         public NotaCreditoController(
             Signer.ICertificadoService certificadoService,
             WebService.ISriWebService webService,
@@ -65,9 +58,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
         [HttpPost("GenerarNotaCredito")]
         public async Task<IActionResult> GenerarNotaCredito([FromBody] NotaCreditoRequest request)
         {
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
-            ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
-
             string logoPath = null;
             string rutaPDF = null;
             string rutaXmlLocal = null;
@@ -180,7 +170,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 if (logoResult.Success && !string.IsNullOrWhiteSpace(logoResult.LogoBase64))
                 {
                     var logoFileName = $"logo_{request.Emisor.RUC}_{DateTime.Now:yyyyMMddHHmmss}.png";
-                    logoPath = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", logoFileName);
+                    logoPath = Path.Combine(Path.GetTempPath(), logoFileName);
 
                     var logoBytes = Convert.FromBase64String(logoResult.LogoBase64);
                     await System.IO.File.WriteAllBytesAsync(logoPath, logoBytes);
@@ -297,7 +287,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 var xmlFirmado = _certificadoService.FirmarDocumento(xmlDoc);
 
                 var nombreArchivoXml = $"NOTACREDITO_{notaCredito.InfoTributaria.ClaveAcceso}.xml";
-                rutaXmlLocal = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", nombreArchivoXml);
+                rutaXmlLocal = Path.Combine(Path.GetTempPath(), nombreArchivoXml);
                 xmlFirmado.Save(rutaXmlLocal);
 
                 var envio = await _webService.ValidarComprobanteAsync(xmlFirmado);
@@ -318,9 +308,8 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     });
                 }
 
-                await Task.Delay(3000);
-
-                var auto = await _webService.AutorizacionComprobanteAsync(notaCredito.InfoTributaria.ClaveAcceso);
+                var auto = await SriAutorizacionHelper.ConsultarAutorizacionConReintentosAsync(
+                    _webService, notaCredito.InfoTributaria.ClaveAcceso);
                 var autorizacionData = auto.Data?.Autorizaciones?.Autorizacion?.FirstOrDefault();
 
                 if (!auto.Ok)
@@ -351,7 +340,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 }
 
                 var nombrePdf = $"NOTACREDITO_{notaCredito.InfoTributaria.ClaveAcceso}.pdf";
-                rutaPDF = Path.Combine("/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica", nombrePdf);
+                rutaPDF = Path.Combine(Path.GetTempPath(), nombrePdf);
                 _rideService.NotaCredito_1_0_0(notaCredito, rutaPDF);
 
                 FrappeUploadResult respuestaUploadPDF;

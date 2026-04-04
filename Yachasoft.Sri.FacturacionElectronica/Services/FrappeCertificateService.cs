@@ -48,7 +48,7 @@ namespace Yachasoft.Sri.FacturacionElectronica.Services
     {
         private readonly HttpClient _httpClient;
         private readonly FrappeSettings _settings;
-        private readonly string _tempFolder = "/home/bitnami/GeneradorPDF/Yachasoft.Sri.FacturacionElectronica/temp_certs";
+        private readonly string _tempFolder = Path.Combine(AppContext.BaseDirectory, "temp_certs");
 
         public FrappeCertificateService(HttpClient httpClient, IOptions<FrappeSettings> options)
         {
