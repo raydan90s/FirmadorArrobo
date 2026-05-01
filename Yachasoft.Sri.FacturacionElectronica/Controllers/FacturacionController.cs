@@ -62,8 +62,8 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                 var tempDir = Path.GetTempPath();
 
                 // ✅ NUEVAS RUTAS LOCALES PARA DESARROLLO
-                var rutaCertificadoLocal = @"D:\GitHub\GeneradorPDF\Yachasoft.Sri.FacturacionElectronica\signature.p12";
-                var rutaLogoLocal = @"D:\GitHub\GeneradorPDF\Yachasoft.Sri.FacturacionElectronica\logo.png";
+                var rutaCertificadoLocal = Path.Combine(Directory.GetCurrentDirectory(), "CertificadosDev", "signature.p12");
+                var rutaLogoLocal = Path.Combine(Directory.GetCurrentDirectory(), "CertificadosDev", "logo.png");
                 var contrasenaP12 = "Compus1234"; // Contraseña hardcodeada para desarrollo
 
                 // ✅ LÓGICA: Si viene en el request, usar eso. Si no, usar archivos locales

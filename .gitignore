@@ -14,6 +14,9 @@ obj/
 ## Rider
 .idea/
 
+## Dev certificates (local only)
+CertificadosDev/
+
 ## OS files
 .DS_Store
 Thumbs.db
