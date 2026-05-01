@@ -49,12 +49,6 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
             _frappeCredentialsService = frappeCredentialsService;
         }
 
-        [HttpGet("Test")]
-        public IActionResult Test()
-        {
-            return Ok(new { mensaje = "NotaCredito Controller funcionando correctamente", timestamp = DateTime.Now });
-        }
-
         [HttpPost("GenerarNotaCredito")]
         public async Task<IActionResult> GenerarNotaCredito([FromBody] NotaCreditoRequest request)
         {
@@ -64,92 +58,51 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
 
             try
             {
-                var credenciales = await _frappeCredentialsService.ObtenerCredencialesAsync(request.Emisor.RazonSocial);
+                var tempDir = Path.GetTempPath();
 
-                string apiKey = null;
-                string apiSecret = null;
-                bool usandoCredencialesEmisor = false;
+                var rutaCertificadoLocal = Path.Combine(Directory.GetCurrentDirectory(), "CertificadosDev", "signature.p12");
+                var rutaLogoLocal = Path.Combine(Directory.GetCurrentDirectory(), "CertificadosDev", "logo.png");
+                var contrasenaP12 = "Compus1234";
 
-                if (credenciales.Success &&
-                    credenciales.TieneApiKey &&
-                    credenciales.TieneApiSecret &&
-                    !string.IsNullOrEmpty(credenciales.ApiKey) &&
-                    !string.IsNullOrEmpty(credenciales.ApiSecret))
+                string certificadoP12Base64;
+                string contrasenaP12Final;
+
+                if (string.IsNullOrEmpty(request.CertificadoP12Base64))
                 {
-                    apiKey = credenciales.ApiKey;
-                    apiSecret = credenciales.ApiSecret;
-                    usandoCredencialesEmisor = true;
-                }
-
-                var verificacion = await _frappeCertService.VerificarCertificadoAsync(
-                    request.Emisor.RazonSocial,
-                    apiKey,
-                    apiSecret
-                );
-
-                if (!verificacion.Success)
-                {
-                    return BadRequest(new
+                    Console.WriteLine("🔧 MODO DESARROLLO: Usando certificado local");
+                    
+                    if (!System.IO.File.Exists(rutaCertificadoLocal))
                     {
-                        success = false,
-                        error = "Error al verificar certificado",
-                        detalles = new
-                        {
-                            error_detalle = verificacion.Error,
-                            usandoCredencialesEmisor = usandoCredencialesEmisor
-                        }
-                    });
+                        return BadRequest(new 
+                        { 
+                            success = false, 
+                            error = $"Certificado local no encontrado en: {rutaCertificadoLocal}" 
+                        });
+                    }
+
+                    var certBytes = await System.IO.File.ReadAllBytesAsync(rutaCertificadoLocal);
+                    certificadoP12Base64 = Convert.ToBase64String(certBytes);
+                    contrasenaP12Final = string.IsNullOrEmpty(request.ContrasenaP12) ? contrasenaP12 : request.ContrasenaP12;
+                    
+                    Console.WriteLine($"✅ Certificado cargado desde: {rutaCertificadoLocal}");
+                    Console.WriteLine($"✅ Tamaño: {certBytes.Length:N0} bytes");
                 }
-
-                if (!verificacion.Vigente)
+                else
                 {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        error = "Certificado no vigente o incompleto",
-                        detalles = new
-                        {
-                            vigente = verificacion.Vigente,
-                            tiene_archivo = verificacion.TieneArchivo,
-                            tiene_password = verificacion.TienePassword,
-                            nombre_archivo = verificacion.NombreArchivo,
-                            fecha_vencimiento = verificacion.FechaVencimiento,
-                            usandoCredencialesEmisor = usandoCredencialesEmisor
-                        }
-                    });
-                }
+                    Console.WriteLine("📤 MODO PRODUCCIÓN: Usando certificado del request");
+                    certificadoP12Base64 = request.CertificadoP12Base64;
+                    contrasenaP12Final = request.ContrasenaP12;
 
-                var certificado = await _frappeCertService.ObtenerCertificadoAsync(
-                    request.Emisor.RazonSocial,
-                    apiKey,
-                    apiSecret
-                );
-
-                if (!certificado.Success)
-                {
-                    return BadRequest(new
+                    if (string.IsNullOrEmpty(contrasenaP12Final))
                     {
-                        success = false,
-                        error = $"No se pudo descargar el certificado: {certificado.Error}",
-                        usandoCredencialesEmisor = usandoCredencialesEmisor
-                    });
-                }
-
-                if (string.IsNullOrEmpty(certificado.Contrasena))
-                {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        error = "No se recibió la contraseña del certificado desde Frappe"
-                    });
+                        return BadRequest(new { success = false, error = "Contraseña del certificado requerida" });
+                    }
                 }
 
                 try
                 {
-                    _certificadoService.CargarDesdeBase64String(
-                        certificado.CertificadoBase64,
-                        certificado.Contrasena
-                    );
+                    _certificadoService.CargarDesdeBase64String(certificadoP12Base64, contrasenaP12Final);
+                    Console.WriteLine("✅ Certificado cargado correctamente");
                 }
                 catch (Exception ex)
                 {
@@ -161,19 +114,29 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     });
                 }
 
-                var logoResult = await _frappeLogoService.ObtenerLogoAsync(
-                    request.Emisor.RazonSocial,
-                    apiKey,
-                    apiSecret
-                );
-
-                if (logoResult.Success && !string.IsNullOrWhiteSpace(logoResult.LogoBase64))
+                if (string.IsNullOrEmpty(request.LogoBase64))
                 {
+                    Console.WriteLine("🔧 MODO DESARROLLO: Usando logo local");
+                    
+                    if (System.IO.File.Exists(rutaLogoLocal))
+                    {
+                        logoPath = rutaLogoLocal;
+                        Console.WriteLine($"✅ Logo cargado desde: {rutaLogoLocal}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"⚠️ Logo local no encontrado en: {rutaLogoLocal}");
+                        Console.WriteLine("⚠️ Continuando sin logo");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("📤 MODO PRODUCCIÓN: Usando logo del request");
                     var logoFileName = $"logo_{request.Emisor.RUC}_{DateTime.Now:yyyyMMddHHmmss}.png";
-                    logoPath = Path.Combine(Path.GetTempPath(), logoFileName);
-
-                    var logoBytes = Convert.FromBase64String(logoResult.LogoBase64);
+                    logoPath = Path.Combine(tempDir, logoFileName);
+                    var logoBytes = Convert.FromBase64String(request.LogoBase64);
                     await System.IO.File.WriteAllBytesAsync(logoPath, logoBytes);
+                    Console.WriteLine($"✅ Logo temporal creado: {logoPath}");
                 }
 
                 var emisor = new Emisor
@@ -235,10 +198,23 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     DetallesAdicionales = d.DetallesAdicionales
                 }).ToList();
 
+                DateTime fechaEmision;
+                if (DateTimeOffset.TryParse(request.FechaEmision, out var dto))
+                {
+                    fechaEmision = dto.DateTime;
+                }
+                else if (!DateTime.TryParse(request.FechaEmision, out fechaEmision))
+                {
+                    fechaEmision = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                        DateTime.UtcNow,
+                        "SA Pacific Standard Time"
+                    );
+                }
+
                 var notaCredito = new NotaCredito_1_0_0Modelo.NotaCredito
                 {
                     PuntoEmision = puntoEmision,
-                    FechaEmision = request.FechaEmision,
+                    FechaEmision = fechaEmision,
                     Sujeto = new Sujeto
                     {
                         Identificacion = request.Cliente.Identificacion,
@@ -272,6 +248,14 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     notaCredito.InfoTributaria.EnumTipoEmision
                 );
 
+                Console.WriteLine("========================================");
+                Console.WriteLine("🔑 DEBUG DE CLAVE DE ACCESO");
+                Console.WriteLine("========================================");
+                Console.WriteLine($"Fecha usada: {notaCredito.FechaEmision:dd-MM-yyyy HH:mm:ss.fff}");
+                Console.WriteLine($"Secuencial: {notaCredito.InfoTributaria.Secuencial}");
+                Console.WriteLine($"Clave generada: {notaCredito.InfoTributaria.ClaveAcceso}");
+                Console.WriteLine("========================================");
+
                 var xmlObj = NotaCredito_1_0_0Mapper.Map(notaCredito);
 
                 var xmlDoc = new XmlDocument();
@@ -283,27 +267,241 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     xmlDoc.Load(memoryStream);
                 }
 
+                var fechaNode = xmlDoc.SelectSingleNode("//fechaEmision");
+                if (fechaNode != null)
+                {
+                    var formato3 = $"{fechaEmision.Day:D2}/{fechaEmision.Month:D2}/{fechaEmision.Year}";
+                    fechaNode.InnerText = formato3;
+                }
+
+                void CorregirDecimales(XmlDocument doc, string xpath, string formato)
+                {
+                    var nodos = doc.SelectNodes(xpath);
+                    if (nodos == null) return;
+                    foreach (XmlNode nodo in nodos)
+                    {
+                        if (decimal.TryParse(nodo.InnerText, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal valor))
+                        {
+                            nodo.InnerText = valor.ToString(formato, System.Globalization.CultureInfo.InvariantCulture);
+                        }
+                    }
+                }
+
+                CorregirDecimales(xmlDoc, "//totalSinImpuestos", "F2");
+                CorregirDecimales(xmlDoc, "//valorModificacion", "F2");
+                CorregirDecimales(xmlDoc, "//baseImponible", "F2");
+                CorregirDecimales(xmlDoc, "//valor", "F2");
+
+                CorregirDecimales(xmlDoc, "//precioUnitario", "F2");
+                CorregirDecimales(xmlDoc, "//precioTotalSinImpuesto", "F2");
+                CorregirDecimales(xmlDoc, "//descuento", "F2");
+                CorregirDecimales(xmlDoc, "//cantidad", "F2");
+
                 xmlDoc.DocumentElement.SetAttribute("id", "comprobante");
                 var xmlFirmado = _certificadoService.FirmarDocumento(xmlDoc);
 
                 var nombreArchivoXml = $"NOTACREDITO_{notaCredito.InfoTributaria.ClaveAcceso}.xml";
-                rutaXmlLocal = Path.Combine(Path.GetTempPath(), nombreArchivoXml);
+                rutaXmlLocal = Path.Combine(tempDir, nombreArchivoXml);
                 xmlFirmado.Save(rutaXmlLocal);
 
-                var envio = await _webService.ValidarComprobanteAsync(xmlFirmado);
-
-                if (!envio.Ok)
+                Console.WriteLine("========================================");
+                Console.WriteLine("📄 XML GENERADO Y FIRMADO (PREVIO AL ENVÍO)");
+                Console.WriteLine("========================================");
+                using (var stringWriter = new StringWriter())
+                using (var xmlTextWriter = new XmlTextWriter(stringWriter))
                 {
-                    var primerComprobante = envio.Data?.Comprobantes?.Comprobante?.FirstOrDefault();
-                    var mensajesEnvio = primerComprobante?.Mensajes?.Mensaje
-                        ?.Select(m => new { m.Identificador, m.Mensaje_, m.Tipo, m.InformacionAdicional })
-                        .ToList();
+                    xmlTextWriter.Formatting = Formatting.Indented;
+                    xmlFirmado.WriteTo(xmlTextWriter);
+                    Console.WriteLine(stringWriter.ToString());
+                }
+                Console.WriteLine("========================================");
+
+                Console.WriteLine("========================================");
+                Console.WriteLine("📤 ENVIANDO NOTA DE CRÉDITO AL SRI");
+                Console.WriteLine("========================================");
+                dynamic envio = null;
+                
+                try
+                {
+                    envio = await _webService.ValidarComprobanteAsync(xmlFirmado);
+                    
+                    Console.WriteLine("========================================");
+                    Console.WriteLine("📥 RESPUESTA COMPLETA DEL SRI - ENVÍO");
+                    Console.WriteLine("========================================");
+                    Console.WriteLine($"✓ envio != null: {envio != null}");
+                    Console.WriteLine($"✓ envio.Ok: {envio?.Ok}");
+                    Console.WriteLine($"✓ envio.Error: '{envio?.Error}'");
+                    Console.WriteLine($"✓ envio.Data != null: {envio?.Data != null}");
+                    
+                    if (envio?.Data != null)
+                    {
+                        Console.WriteLine($"✓ envio.Data.GetType(): {envio.Data.GetType().FullName}");
+                        
+                        try
+                        {
+                            var jsonEnvio = Newtonsoft.Json.JsonConvert.SerializeObject(envio, Newtonsoft.Json.Formatting.Indented);
+                            Console.WriteLine("--- INICIO JSON COMPLETO DE ENVÍO ---");
+                            Console.WriteLine(jsonEnvio);
+                            Console.WriteLine("--- FIN JSON COMPLETO DE ENVÍO ---");
+                        }
+                        catch (Exception exJson)
+                        {
+                            Console.WriteLine($"⚠️ No se pudo serializar a JSON: {exJson.Message}");
+                        }
+                        
+                        Console.WriteLine("--- PROPIEDADES DE envio.Data ---");
+                        try
+                        {
+                            var estado = envio.Data.Estado;
+                            Console.WriteLine($"✓ Estado: '{estado}'");
+                            Console.WriteLine($"✓ Estado (tipo): {estado?.GetType().FullName}");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"✗ Error al leer Estado: {ex.Message}");
+                        }
+                        
+                        try
+                        {
+                            var comprobantes = envio.Data.Comprobantes;
+                            Console.WriteLine($"✓ Comprobantes: {comprobantes}");
+                            Console.WriteLine($"✓ Comprobantes != null: {comprobantes != null}");
+                            
+                            if (comprobantes != null)
+                            {
+                                Console.WriteLine($"✓ Comprobantes (tipo): {comprobantes.GetType().FullName}");
+                                
+                                var comprobantesList = comprobantes.Comprobante;
+                                Console.WriteLine($"✓ Comprobante (lista): {comprobantesList}");
+                                Console.WriteLine($"✓ Comprobante != null: {comprobantesList != null}");
+                                
+                                if (comprobantesList != null)
+                                {
+                                    Console.WriteLine($"✓ Comprobante (tipo): {comprobantesList.GetType().FullName}");
+                                    Console.WriteLine($"✓ Cantidad de comprobantes: {comprobantesList.Count}");
+                                    
+                                    for (int i = 0; i < comprobantesList.Count; i++)
+                                    {
+                                        var comp = comprobantesList[i];
+                                        Console.WriteLine($"--- COMPROBANTE [{i}] ---");
+                                        Console.WriteLine($"  Tipo: {comp.GetType().FullName}");
+                                        
+                                        try { Console.WriteLine($"  ClaveAcceso: {comp.ClaveAcceso}"); } catch { }
+                                        
+                                        try
+                                        {
+                                            var mensajes = comp.Mensajes;
+                                            Console.WriteLine($"  Mensajes: {mensajes}");
+                                            Console.WriteLine($"  Mensajes != null: {mensajes != null}");
+                                            
+                                            if (mensajes != null)
+                                            {
+                                                var mensajeList = mensajes.Mensaje;
+                                                Console.WriteLine($"  Mensaje (lista): {mensajeList}");
+                                                Console.WriteLine($"  Cantidad de mensajes: {mensajeList?.Count}");
+                                                
+                                                if (mensajeList != null)
+                                                {
+                                                    foreach (var msg in mensajeList)
+                                                    {
+                                                        Console.WriteLine($"    ► Mensaje:");
+                                                        Console.WriteLine($"      - Identificador: {msg.Identificador}");
+                                                        Console.WriteLine($"      - Tipo: {msg.Tipo}");
+                                                        Console.WriteLine($"      - Mensaje_: {msg.Mensaje_}");
+                                                        Console.WriteLine($"      - InformacionAdicional: {msg.InformacionAdicional}");
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        catch (Exception exMsg)
+                                        {
+                                            Console.WriteLine($"  ✗ Error al leer Mensajes: {exMsg.Message}");
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception exComp)
+                        {
+                            Console.WriteLine($"✗ Error al leer Comprobantes: {exComp.Message}");
+                            Console.WriteLine($"   StackTrace: {exComp.StackTrace}");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("⚠️ envio.Data ES NULL");
+                    }
+                    
+                    Console.WriteLine("========================================");
+                }
+                catch (Exception exEnvio)
+                {
+                    Console.WriteLine("========================================");
+                    Console.WriteLine("❌ EXCEPCIÓN AL ENVIAR AL SRI");
+                    Console.WriteLine("========================================");
+                    Console.WriteLine($"Mensaje: {exEnvio.Message}");
+                    Console.WriteLine($"Tipo: {exEnvio.GetType().FullName}");
+                    Console.WriteLine($"StackTrace: {exEnvio.StackTrace}");
+                    
+                    if (exEnvio.InnerException != null)
+                    {
+                        Console.WriteLine($"InnerException.Mensaje: {exEnvio.InnerException.Message}");
+                        Console.WriteLine($"InnerException.Tipo: {exEnvio.InnerException.GetType().FullName}");
+                        Console.WriteLine($"InnerException.StackTrace: {exEnvio.InnerException.StackTrace}");
+                    }
+                    
+                    Console.WriteLine("========================================");
+                    
+                    return BadRequest(new
+                    {
+                        success = false,
+                        error = "Error al conectar con el SRI",
+                        detalleError = exEnvio.Message,
+                        innerError = exEnvio.InnerException?.Message
+                    });
+                }
+
+                var estadoEnvio = envio.Data?.Estado?.ToString()?.ToUpper() ?? "";
+                Console.WriteLine($"🔍 Estado procesado para validación: '{estadoEnvio}'");
+                Console.WriteLine($"🔍 envio.Ok: {envio.Ok}");
+                
+                if (!envio.Ok || estadoEnvio == "DEVUELTA")
+                {
+                    Console.WriteLine("⚠️ Nota de Crédito DEVUELTA o con errores");
+                    
+                    var mensajesEnvio = new List<object>();
+                    
+                    dynamic primerComprobante = null;
+                    var comprobantes = envio.Data?.Comprobantes;
+                    
+                    if (comprobantes != null)
+                    {
+                        var comprobantesList = comprobantes.Comprobante;
+                        if (comprobantesList != null && comprobantesList.Count > 0)
+                        {
+                            primerComprobante = comprobantesList[0];
+                        }
+                    }
+                    
+                    if (primerComprobante?.Mensajes?.Mensaje != null)
+                    {
+                        foreach (var m in primerComprobante.Mensajes.Mensaje)
+                        {
+                            mensajesEnvio.Add(new 
+                            { 
+                                Identificador = m.Identificador, 
+                                Mensaje_ = m.Mensaje_, 
+                                Tipo = m.Tipo, 
+                                InformacionAdicional = m.InformacionAdicional 
+                            });
+                        }
+                    }
 
                     return Ok(new
                     {
                         success = false,
-                        estado = envio.Data?.Estado,
-                        error = envio.Error,
+                        estado = estadoEnvio,
+                        error = "Nota de Crédito rechazada por el SRI",
                         mensajes = mensajesEnvio
                     });
                 }
@@ -321,87 +519,73 @@ namespace Yachasoft.Sri.FacturacionElectronica.Controllers
                     return Ok(new
                     {
                         success = false,
-                        estado = autorizacionData?.Estado,
-                        mensajes = mensajesAutorizacion
+                        estado = autorizacionData?.Estado ?? "SIN_RESPUESTA",
+                        mensajes = mensajesAutorizacion,
+                        claveAcceso = notaCredito.InfoTributaria.ClaveAcceso,
+                        error = autorizacionData?.Estado == null
+                            ? "La Nota de Crédito aún está en procesamiento. Consulte la autorización más tarde con la clave de acceso."
+                            : "Nota de Crédito no autorizada por el SRI"
                     });
                 }
 
-                if (autorizacionData != null)
+                Console.WriteLine("✅ Nota de Crédito AUTORIZADA");
+                
+                notaCredito.Autorizacion.Numero = autorizacionData.NumeroAutorizacion;
+                
+                DateTimeOffset fechaOffset;
+                if (DateTimeOffset.TryParse(autorizacionData.FechaAutorizacion, out fechaOffset))
                 {
-                    notaCredito.Autorizacion.Numero = autorizacionData.NumeroAutorizacion;
-                    if (DateTimeOffset.TryParse(autorizacionData.FechaAutorizacion, out var fechaOffset))
-                    {
-                        notaCredito.Autorizacion.Fecha = fechaOffset.ToOffset(TimeSpan.FromHours(-5)).DateTime;
-                    }
-                    else
-                    {
-                        throw new Exception($"Fecha de autorización inválida: {autorizacionData.FechaAutorizacion}");
-                    }
-                }
-
-                var nombrePdf = $"NOTACREDITO_{notaCredito.InfoTributaria.ClaveAcceso}.pdf";
-                rutaPDF = Path.Combine(Path.GetTempPath(), nombrePdf);
-                _rideService.NotaCredito_1_0_0(notaCredito, rutaPDF);
-
-                FrappeUploadResult respuestaUploadPDF;
-                FrappeUploadResult respuestaUploadXML;
-
-                if (usandoCredencialesEmisor)
-                {
-                    respuestaUploadPDF = await _frappeUploader.UploadFileAsync(
-                        filePath: rutaPDF,
-                        fileName: Path.GetFileName(rutaPDF),
-                        apiKey: apiKey,
-                        apiSecret: apiSecret,
-                        folder: "Home/Nota de Crédito/PDF"
-                    );
-
-                    respuestaUploadXML = await _frappeUploader.UploadFileAsync(
-                        filePath: rutaXmlLocal,
-                        fileName: nombreArchivoXml,
-                        apiKey: apiKey,
-                        apiSecret: apiSecret,
-                        folder: "Home/Nota de Crédito/XML"
-                    );
+                    notaCredito.Autorizacion.Fecha = fechaOffset.ToOffset(TimeSpan.FromHours(-5)).DateTime;
                 }
                 else
                 {
-                    respuestaUploadPDF = await _frappeUploader.UploadFileAsync(
-                        filePath: rutaPDF,
-                        fileName: Path.GetFileName(rutaPDF),
-                        folder: "Home/Nota de Crédito/PDF"
-                    );
-
-                    respuestaUploadXML = await _frappeUploader.UploadFileAsync(
-                        filePath: rutaXmlLocal,
-                        fileName: nombreArchivoXml,
-                        folder: "Home/Nota de Crédito/XML"
-                    );
+                    throw new Exception($"Fecha de autorización inválida: {autorizacionData.FechaAutorizacion}");
                 }
+                
+                Console.WriteLine($"✅ Número de autorización: {notaCredito.Autorizacion.Numero}");
+                Console.WriteLine($"✅ Fecha de autorización: {notaCredito.Autorizacion.Fecha}");
 
-                await LimpiarArchivosTemporales(rutaPDF, rutaXmlLocal, logoPath);
+                var nombrePdf = $"NOTACREDITO_{notaCredito.InfoTributaria.ClaveAcceso}.pdf";
+                rutaPDF = Path.Combine(tempDir, nombrePdf);
+                _rideService.NotaCredito_1_0_0(notaCredito, rutaPDF);
+
+                var pdfBase64 = Convert.ToBase64String(await System.IO.File.ReadAllBytesAsync(rutaPDF));
+                var xmlBase64 = Convert.ToBase64String(await System.IO.File.ReadAllBytesAsync(rutaXmlLocal));
 
                 return Ok(new
                 {
                     success = true,
                     claveAcceso = notaCredito.InfoTributaria.ClaveAcceso,
-                    mensaje = "Nota de Crédito autorizada, PDF generado y archivos subidos a Frappe correctamente",
+                    mensaje = "Nota de Crédito autorizada y PDF generado correctamente",
                     numeroAutorizacion = notaCredito.Autorizacion.Numero,
                     fechaAutorizacion = notaCredito.Autorizacion.Fecha.ToString("yyyy-MM-dd HH:mm:ss"),
-                    respuestaFrappePDF = respuestaUploadPDF,
-                    respuestaFrappeXML = respuestaUploadXML,
-                    credencialesUsadas = usandoCredencialesEmisor ? "Emisor" : "Por defecto"
+                    pdfBase64 = pdfBase64,
+                    xmlBase64 = xmlBase64
                 });
             }
             catch (Exception ex)
             {
+                Console.WriteLine("========================================");
+                Console.WriteLine("❌ EXCEPCIÓN GENERAL");
+                Console.WriteLine("========================================");
+                Console.WriteLine($"Mensaje: {ex.Message}");
+                Console.WriteLine($"Tipo: {ex.GetType().FullName}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"InnerException.Mensaje: {ex.InnerException.Message}");
+                    Console.WriteLine($"InnerException.StackTrace: {ex.InnerException.StackTrace}");
+                }
+                
+                Console.WriteLine("========================================");
+                
                 return BadRequest(new
                 {
                     success = false,
                     error = ex.Message,
                     stackTrace = ex.StackTrace,
-                    innerError = ex.InnerException?.Message,
-                    innerStackTrace = ex.InnerException?.StackTrace
+                    innerError = ex.InnerException?.Message
                 });
             }
             finally
